@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V1.7</title>
+    <title>OPS PORTAL V1.8</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
         <div id="loading-spinner" class="spinner"></div>
         <div id="error-icon" class="hidden text-5xl mb-4">⚠️</div>
         <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Initializing...</h2>
-        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white">Please do not close the app</p>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Large files detected. Keeping connection alive...</p>
         <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Upload</button>
     </div>
 
@@ -60,14 +60,14 @@
                 </select>
                 <select id="filter-outlet" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold"></select>
                 <input type="month" id="filter-date" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold">
-                <button onclick="downloadCSV()" class="bg-emerald-600 text-white p-3 rounded-xl text-[10px] font-black uppercase col-span-2 shadow-lg active:scale-95 transition-transform">Download CSV Report</button>
+                <button onclick="downloadCSV()" class="bg-emerald-600 text-white p-3 rounded-xl text-[10px] font-black uppercase col-span-2 shadow-lg">Download CSV Report</button>
             </div>
             <div id="admin-log-container" class="space-y-4 pb-10"></div>
         </div>
     </div>
 
     <header class="ocean-gradient text-white pt-12 pb-10 px-8 rounded-b-[45px] shadow-2xl relative">
-        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V1.7</div>
+        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V1.8</div>
         <div class="flex flex-col items-center">
             <img src="icon-512.jpg" class="w-16 h-16 rounded-2xl shadow-lg mb-3 border-2 border-sky-400/30" alt="Logo">
             <h1 class="text-2xl font-800 text-center tracking-tighter text-white">OPS PORTAL</h1>
@@ -96,8 +96,10 @@
 
         <section id="step-2" class="hidden">
             <div class="flex items-center justify-between mb-4">
-                <button onclick="goBack()" class="bg-white/80 px-4 py-2 rounded-full shadow-sm text-sky-800 font-bold text-xs flex items-center border border-sky-100 active:scale-95 transition-all"><span class="mr-2">⇠</span> Change Role / Name</button>
-                <span id="portal-display-title" class="text-sky-900 font-800 italic text-sm"></span>
+                <button onclick="goBack()" class="bg-white/90 px-5 py-3 rounded-2xl shadow-md text-sky-800 font-bold text-xs flex items-center border border-sky-100 active:scale-90 transition-all">
+                    <span class="mr-2 text-lg">⇠</span> BACK
+                </button>
+                <span id="portal-display-title" class="text-sky-900 font-800 italic text-sm uppercase"></span>
             </div>
             <div id="photo-grid" class="space-y-6">
                 <script>
@@ -218,39 +220,41 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Please fill name and select role.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Fill name and select role.");
             document.getElementById('step-1').style.display = 'none'; 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
         }
-        function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').style.display = 'block'; }
+        function goBack() { 
+            document.getElementById('step-2').classList.add('hidden'); 
+            document.getElementById('step-1').style.display = 'block'; 
+        }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
         function showSuccess() { document.getElementById('success-overlay').style.display = 'flex'; }
 
+        /* FIXED: IMAGE STABILITY LOGIC */
         async function compressImage(base64) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.src = base64;
-                img.onerror = () => reject("Image Load Failed");
+                img.onerror = () => reject("Image Failed");
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    // LOWER RESOLUTION FOR UPLOAD STABILITY
-                    let width = img.width, height = img.height, max = 1000; 
+                    // STABILITY: Lower resolution to 800px to avoid timeouts
+                    let width = img.width, height = img.height, max = 800; 
                     if (width > height && width > max) { height *= max / width; width = max; }
                     else if (height > max) { width *= max / height; height = max; }
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     const now = new Date();
-                    const name = document.getElementById('user-name').value;
-                    const outlet = document.getElementById('outlet-select').value;
-                    const stampText = `${name} - ${outlet} - ${currentRole} - ${now.toLocaleString()}`;
+                    const stampText = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value} - ${now.toLocaleString()}`;
                     ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
                     ctx.fillRect(0, height - 45, width, 45); 
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 18px Arial";
+                    ctx.font = "bold 16px Arial";
                     ctx.fillText(stampText, 20, height - 18);
-                    // LOWER QUALITY (0.4) TO PREVENT INTERRUPTION
+                    // QUALITY 0.4 for smallest file size with good clarity
                     resolve(canvas.toDataURL('image/jpeg', 0.4));
                 };
             });
@@ -267,16 +271,16 @@
             spinner.classList.remove('hidden');
             retryBtn.classList.add('hidden');
             errIcon.classList.add('hidden');
-            loadingText.innerText = "Cleaning & Compressing...";
+            loadingText.innerText = "Packing Data...";
 
-            const activePhotoIds = [];
-            for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activePhotoIds.push(i); 
+            const activeIds = [];
+            for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
             try {
-                // SEQUENTIAL ARRAY PACKING
-                const photoPayloadArr = await Promise.all(activePhotoIds.map(async (id) => {
-                    const cleanBase64 = await compressImage(localStorage.getItem(`photo_data_${id}`));
-                    return { base64: cleanBase64, description: document.getElementById(`desc-${id}`).value || "" };
+                const photoPayloadArr = await Promise.all(activeIds.map(async (id) => {
+                    const raw = localStorage.getItem(`photo_data_${id}`);
+                    const clean = await compressImage(raw);
+                    return { base64: clean, description: document.getElementById(`desc-${id}`).value || "" };
                 }));
 
                 loadingText.innerText = `Uploading ${photoPayloadArr.length} Photos...`;
@@ -290,7 +294,7 @@
                 };
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 120000); 
+                const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 MIN TIMEOUT
 
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
@@ -307,14 +311,13 @@
                     localStorage.setItem('ops_history', JSON.stringify(history));
                     overlay.style.display = 'none';
                     showSuccess();
-                } else { throw new Error(result.error || "Server Rejection"); }
+                } else { throw new Error(result.error); }
 
             } catch (e) {
                 spinner.classList.add('hidden');
                 errIcon.classList.remove('hidden');
                 retryBtn.classList.remove('hidden');
-                loadingText.innerText = "Connection Slow / Interrupted";
-                console.error("Upload Error:", e);
+                loadingText.innerText = "Internet Timed Out";
             }
         }
 
@@ -333,7 +336,7 @@
                 return matchesOutlet && matchesDate;
             });
 
-            if(filtered.length === 0) container.innerHTML = `<p class="text-center py-10 text-xs text-slate-400">No records found.</p>`;
+            if(filtered.length === 0) container.innerHTML = `<p class="text-center py-10 text-xs">No records found.</p>`;
 
             filtered.reverse().forEach((row) => {
                 const card = document.createElement('div');
@@ -341,7 +344,7 @@
                 let linksHtml = "";
                 for(let i=4; i < row.length; i+=2) { 
                     if(row[i] && row[i].toString().startsWith('http')) {
-                        linksHtml += `<a href="${row[i]}" target="_blank" class="inline-block mr-2 mb-2 p-2 bg-sky-50 rounded-lg text-[8px] text-sky-700 font-black border border-sky-100 uppercase">View Photo ${Math.floor((i-4)/2)+1}</a>`;
+                        linksHtml += `<a href="${row[i]}" target="_blank" class="inline-block mr-2 mb-2 p-2 bg-sky-50 rounded-lg text-[8px] text-sky-700 font-black border border-sky-100 uppercase">View Image</a>`;
                     }
                 }
                 card.innerHTML = `
@@ -367,11 +370,8 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `OPS_PORTAL_LOG_${new Date().getTime()}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = url; a.download = `OPS_PORTAL_LOG_${new Date().getTime()}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
 
         function promptAdmin() {
