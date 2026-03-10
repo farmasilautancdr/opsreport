@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>OPS PORTAL V1.7</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --ocean: #075985; --aqua: #2dd4bf; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f0f9ff; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+        .ocean-gradient { background: linear-gradient(135deg, #075985 0%, #0c4a6e 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border: 1px solid #bae6fd; }
+        .photo-card { background: #ffffff; border: 1px solid #e0f2fe; border-radius: 20px; padding: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .photo-upload-zone { width: 100%; height: 220px; border: 2px dashed #7dd3fc; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #f8fafc; cursor: pointer; }
+        .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
+        .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); color: white; font-size: 9px; padding: 20px 12px 8px 12px; z-index: 20; line-height: 1.3; pointer-events: none; }
+        .clear-btn { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 100; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
+        #loading-overlay { background: rgba(7, 89, 133, 0.95); backdrop-filter: blur(10px); color: white; z-index: 200; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .checkmark { width: 80px; height: 80px; border-radius: 50%; stroke: #14b8a6; stroke-width: 2; box-shadow: inset 0px 0px 0px #14b8a6; animation: fill .4s ease-in-out .4s forwards; }
+        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 40px #14b8a6; } }
+        .hidden { display: none; }
+        button:disabled { opacity: 0.3; filter: grayscale(1); }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div id="loading-spinner" class="spinner"></div>
+        <div id="error-icon" class="hidden text-5xl mb-4">⚠️</div>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Initializing...</h2>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white">Please do not close the app</p>
+        <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Upload</button>
+    </div>
+
+    <div id="success-overlay">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="25" fill="none" stroke="#14b8a6" stroke-width="2"/>
+            <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" stroke="white" stroke-width="4"/>
+        </svg>
+        <h2 class="text-2xl font-800 text-sky-900 mt-6 uppercase tracking-widest">Success</h2>
+        <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">New Entry</button>
+    </div>
+
+    <div id="admin-overlay" class="p-6">
+        <div class="w-full max-w-lg">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-800 text-sky-900 uppercase">Supervisor Mode</h2>
+                <button onclick="closeAdmin()" class="text-xs font-bold text-red-500 underline">Exit</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-6">
+                <select id="filter-role" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold">
+                    <option value="ALL">All Roles</option>
+                    <option value="DRIVER">Driver</option>
+                    <option value="OUTLET">Staff/Outlet</option>
+                </select>
+                <select id="filter-outlet" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold"></select>
+                <input type="month" id="filter-date" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold">
+                <button onclick="downloadCSV()" class="bg-emerald-600 text-white p-3 rounded-xl text-[10px] font-black uppercase col-span-2 shadow-lg active:scale-95 transition-transform">Download CSV Report</button>
+            </div>
+            <div id="admin-log-container" class="space-y-4 pb-10"></div>
+        </div>
+    </div>
+
+    <header class="ocean-gradient text-white pt-12 pb-10 px-8 rounded-b-[45px] shadow-2xl relative">
+        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V1.7</div>
+        <div class="flex flex-col items-center">
+            <img src="icon-512.jpg" class="w-16 h-16 rounded-2xl shadow-lg mb-3 border-2 border-sky-400/30" alt="Logo">
+            <h1 class="text-2xl font-800 text-center tracking-tighter text-white">OPS PORTAL</h1>
+            <p class="text-center text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
+        </div>
+    </header>
+
+    <main class="px-5 -mt-8 pb-20">
+        <section id="step-1" class="glass-card rounded-[35px] p-7 shadow-2xl">
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[11px] font-800 text-sky-900 uppercase mb-3 block tracking-widest ml-1">Identity & Role</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="role-driver" onclick="selectRole('DRIVER')" class="py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white active:scale-95 transition-all">DRIVER</button>
+                        <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white active:scale-95 transition-all">OUTLET</button>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Full Name" class="w-full p-5 rounded-2xl border border-sky-100 outline-none focus:ring-2 focus:ring-cyan-400 bg-white font-semibold text-sky-900">
+                    <select id="outlet-select" onchange="saveDraft()" class="w-full p-5 rounded-2xl border border-sky-100 bg-white outline-none font-semibold text-sky-900 appearance-none"></select>
+                    <input type="date" id="entry-date" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-sky-100 bg-white outline-none font-semibold text-sky-900">
+                </div>
+                <button onclick="openPortal()" class="w-full bg-cyan-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-cyan-100 uppercase tracking-widest text-sm hover:bg-cyan-600 active:scale-95 transition-all">Access Portal</button>
+            </div>
+        </section>
+
+        <section id="step-2" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="goBack()" class="bg-white/80 px-4 py-2 rounded-full shadow-sm text-sky-800 font-bold text-xs flex items-center border border-sky-100 active:scale-95 transition-all"><span class="mr-2">⇠</span> Change Role / Name</button>
+                <span id="portal-display-title" class="text-sky-900 font-800 italic text-sm"></span>
+            </div>
+            <div id="photo-grid" class="space-y-6">
+                <script>
+                    for(let i=1; i<=12; i++) {
+                        document.write(`
+                            <div class="photo-card space-y-4" id="photo-card-${i}">
+                                <span class="text-[10px] font-black text-sky-300 uppercase tracking-[0.2em]">Photo ${i} ${i>1 ? '(Optional)' : ''}</span>
+                                <div class="photo-upload-zone" id="zone-${i}" onclick="triggerCamera(${i})">
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-2">📸</div><div class="text-[10px] font-800 text-cyan-500 uppercase">Snap Capture</div></div>
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="previewPhoto(${i})">
+                                    <div id="wrap-${i}"></div>
+                                </div>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-medium text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Details..."></textarea>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+            <button id="submit-btn" disabled onclick="processAllPortals()" class="w-full bg-slate-800 text-white font-black py-6 rounded-3xl shadow-2xl uppercase tracking-[0.3em] mt-8 mb-10 transition-all">Submit Report</button>
+        </section>
+    </main>
+
+    <div class="fixed bottom-4 right-4 z-50">
+        <button onclick="promptAdmin()" class="bg-white/50 backdrop-blur p-2 rounded-lg text-[8px] font-bold text-sky-900/30 uppercase">Supervisor Mode</button>
+    </div>
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwy58cuAW4o6ZMuvH98TWoBwnSFfxppFG-eg6kbZvzM1I9fNYHlejK6WVFj79fZwY1r5w/exec';
+        const outlets = ["AJ", "B6", "BB", "BJR", "BP", "CDR", "CK", "DG", "DGD", "GB", "GBD", "GM", "HL", "HQ", "HQCT", "JL", "JLD", "JTH", "KB", "KBKK", "KBKS", "KBTJ", "KKR", "KL", "KMD", "KMN", "KMSK", "KS", "MC", "MLR", "MR", "PC", "PK", "PM", "PP", "PPK", "PSPD", "PT", "RJ", "SLS", "SMR", "ST", "TM", "TMD", "TMT", "TPOH", "TPT", "WM"];
+        let currentRole = "";
+
+        const sel = document.getElementById('outlet-select');
+        const adminSel = document.getElementById('filter-outlet');
+        sel.innerHTML = outlets.map(o => `<option value="${o}">${o}</option>`).join('');
+        adminSel.innerHTML = `<option value="ALL">All Outlets</option>` + outlets.map(o => `<option value="${o}">${o}</option>`).join('');
+        
+        document.getElementById('entry-date').valueAsDate = new Date();
+        document.getElementById('filter-date').value = new Date().toISOString().slice(0, 7);
+
+        window.onload = () => {
+            const draft = JSON.parse(localStorage.getItem('ops_portal_draft'));
+            if(draft) {
+                document.getElementById('user-name').value = draft.user || "";
+                document.getElementById('outlet-select').value = draft.outlet || "AJ";
+                document.getElementById('entry-date').value = draft.date || new Date().toISOString().split('T')[0];
+                if(draft.role) selectRole(draft.role);
+                for(let i=1; i<=12; i++) {
+                    const savedDesc = draft.descriptions?.[i-1];
+                    if(savedDesc) document.getElementById(`desc-${i}`).value = savedDesc;
+                    const savedImg = localStorage.getItem(`photo_data_${i}`);
+                    if(savedImg) displayStoredPhoto(i, savedImg, draft.photo_meta?.[i-1]);
+                }
+                validateSubmit();
+            }
+        };
+
+        function selectRole(role) {
+            currentRole = role;
+            const isDriver = role === 'DRIVER';
+            document.getElementById('role-driver').className = isDriver ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
+            document.getElementById('role-outlet').className = !isDriver ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
+            const ph = currentRole === 'DRIVER' ? "Lokasi/Duit Tukar/Lain-lain Report" : "Duit Tukar/Accuracy/Lain-lain Report";
+            for(let i=1; i<=12; i++) document.getElementById(`desc-${i}`).placeholder = ph;
+            saveDraft();
+        }
+
+        function saveDraft() {
+            const descs = [];
+            for(let i=1; i<=12; i++) descs.push(document.getElementById(`desc-${i}`).value);
+            const draft = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, descriptions: descs, photo_meta: [] };
+            for(let i=1; i<=12; i++) {
+                const badge = document.getElementById(`meta-${i}`);
+                draft.photo_meta.push(badge ? badge.innerText : null);
+            }
+            localStorage.setItem('ops_portal_draft', JSON.stringify(draft));
+        }
+
+        function triggerCamera(id) { if (!localStorage.getItem(`photo_data_${id}`)) document.getElementById(`cam-${id}`).click(); }
+
+        function previewPhoto(id) {
+            const file = document.getElementById(`cam-${id}`).files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const now = new Date();
+                const meta = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}\nTask: ${currentRole} Portal\n${now.toLocaleDateString('en-GB')} | ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+                localStorage.setItem(`photo_data_${id}`, e.target.result);
+                displayStoredPhoto(id, e.target.result, meta);
+                saveDraft();
+                validateSubmit();
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function displayStoredPhoto(id, base64, meta) {
+            const wrap = document.getElementById(`wrap-${id}`);
+            const placeholder = document.getElementById(`placeholder-${id}`);
+            if(placeholder) placeholder.classList.add('hidden');
+            wrap.innerHTML = `<button class="clear-btn" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button><img src="${base64}"><div class="timestamp-badge" id="meta-${id}">${meta.replace(/\n/g, '<br>')}</div>`;
+        }
+
+        function clearPhoto(id) {
+            document.getElementById(`cam-${id}`).value = "";
+            localStorage.removeItem(`photo_data_${id}`);
+            document.getElementById(`wrap-${id}`).innerHTML = "";
+            document.getElementById(`placeholder-${id}`).classList.remove('hidden');
+            saveDraft();
+            validateSubmit();
+        }
+
+        function validateSubmit() {
+            let count = 0;
+            for(let i=1; i<=12; i++) if(localStorage.getItem(`photo_data_${i}`)) count++;
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = count < 1;
+            if(count >= 1) btn.classList.replace('bg-slate-800', 'bg-cyan-600');
+            else btn.classList.replace('bg-cyan-600', 'bg-slate-800');
+        }
+
+        function openPortal() { 
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Please fill name and select role.");
+            document.getElementById('step-1').style.display = 'none'; 
+            document.getElementById('step-2').classList.remove('hidden'); 
+            document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
+        }
+        function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').style.display = 'block'; }
+        function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
+        function showSuccess() { document.getElementById('success-overlay').style.display = 'flex'; }
+
+        async function compressImage(base64) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = base64;
+                img.onerror = () => reject("Image Load Failed");
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    // LOWER RESOLUTION FOR UPLOAD STABILITY
+                    let width = img.width, height = img.height, max = 1000; 
+                    if (width > height && width > max) { height *= max / width; width = max; }
+                    else if (height > max) { width *= max / height; height = max; }
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const now = new Date();
+                    const name = document.getElementById('user-name').value;
+                    const outlet = document.getElementById('outlet-select').value;
+                    const stampText = `${name} - ${outlet} - ${currentRole} - ${now.toLocaleString()}`;
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+                    ctx.fillRect(0, height - 45, width, 45); 
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 18px Arial";
+                    ctx.fillText(stampText, 20, height - 18);
+                    // LOWER QUALITY (0.4) TO PREVENT INTERRUPTION
+                    resolve(canvas.toDataURL('image/jpeg', 0.4));
+                };
+            });
+        }
+
+        async function processAllPortals() {
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            const spinner = document.getElementById('loading-spinner');
+            const retryBtn = document.getElementById('retry-btn');
+            const errIcon = document.getElementById('error-icon');
+            
+            overlay.style.display = 'flex';
+            spinner.classList.remove('hidden');
+            retryBtn.classList.add('hidden');
+            errIcon.classList.add('hidden');
+            loadingText.innerText = "Cleaning & Compressing...";
+
+            const activePhotoIds = [];
+            for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activePhotoIds.push(i); 
+
+            try {
+                // SEQUENTIAL ARRAY PACKING
+                const photoPayloadArr = await Promise.all(activePhotoIds.map(async (id) => {
+                    const cleanBase64 = await compressImage(localStorage.getItem(`photo_data_${id}`));
+                    return { base64: cleanBase64, description: document.getElementById(`desc-${id}`).value || "" };
+                }));
+
+                loadingText.innerText = `Uploading ${photoPayloadArr.length} Photos...`;
+
+                const payload = { 
+                    user: document.getElementById('user-name').value,
+                    role: currentRole,
+                    outlet: document.getElementById('outlet-select').value,
+                    date: document.getElementById('entry-date').value,
+                    photos: photoPayloadArr 
+                };
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000); 
+
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const result = await response.json();
+
+                if (response.ok && result.result === "success") {
+                    let history = JSON.parse(localStorage.getItem('ops_history')) || [];
+                    history.push(result.historyData); 
+                    localStorage.setItem('ops_history', JSON.stringify(history));
+                    overlay.style.display = 'none';
+                    showSuccess();
+                } else { throw new Error(result.error || "Server Rejection"); }
+
+            } catch (e) {
+                spinner.classList.add('hidden');
+                errIcon.classList.remove('hidden');
+                retryBtn.classList.remove('hidden');
+                loadingText.innerText = "Connection Slow / Interrupted";
+                console.error("Upload Error:", e);
+            }
+        }
+
+        function renderAdminLogs() {
+            const history = JSON.parse(localStorage.getItem('ops_history')) || [];
+            const container = document.getElementById('admin-log-container');
+            container.innerHTML = "";
+            const roleFilter = document.getElementById('filter-role').value;
+            const outletFilter = document.getElementById('filter-outlet').value;
+            const dateFilter = document.getElementById('filter-date').value;
+
+            const filtered = history.filter(row => {
+                const matchesRole = roleFilter === "ALL" || (row[4] && row[4].toString().toLowerCase().includes(roleFilter.toLowerCase())); 
+                const matchesOutlet = outletFilter === "ALL" || row[2] === outletFilter;
+                const matchesDate = !dateFilter || row[0].toString().startsWith(dateFilter);
+                return matchesOutlet && matchesDate;
+            });
+
+            if(filtered.length === 0) container.innerHTML = `<p class="text-center py-10 text-xs text-slate-400">No records found.</p>`;
+
+            filtered.reverse().forEach((row) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl border border-sky-100 shadow-sm mb-4";
+                let linksHtml = "";
+                for(let i=4; i < row.length; i+=2) { 
+                    if(row[i] && row[i].toString().startsWith('http')) {
+                        linksHtml += `<a href="${row[i]}" target="_blank" class="inline-block mr-2 mb-2 p-2 bg-sky-50 rounded-lg text-[8px] text-sky-700 font-black border border-sky-100 uppercase">View Photo ${Math.floor((i-4)/2)+1}</a>`;
+                    }
+                }
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div><p class="text-[10px] font-black uppercase text-sky-900">${row[1]}</p><p class="text-[8px] font-bold text-slate-400">${row[2]}</p></div>
+                        <span class="text-[8px] bg-sky-100 text-sky-700 px-2 py-1 rounded-md font-bold">${new Date(row[0]).toLocaleDateString()}</span>
+                    </div>
+                    <div class="flex flex-wrap border-t pt-3">${linksHtml}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function downloadCSV() {
+            const history = JSON.parse(localStorage.getItem('ops_history')) || [];
+            if(history.length === 0) return alert("No data.");
+            const header = "Timestamp,User,Outlet,Date,Photo_1,Desc_1,Photo_2,Desc_2,Photo_3,Desc_3,Photo_4,Desc_4,Photo_5,Desc_5,Photo_6,Desc_6,Photo_7,Desc_7,Photo_8,Desc_8,Photo_9,Desc_9,Photo_10,Desc_10,Photo_11,Desc_11,Photo_12,Desc_12\n";
+            let csv = header;
+            history.forEach(row => {
+                const sanitizedRow = row.map(cell => `"${(cell || "").toString().replace(/"/g, '""')}"`);
+                csv += sanitizedRow.join(",") + "\n";
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OPS_PORTAL_LOG_${new Date().getTime()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function promptAdmin() {
+            const pass = prompt("Enter Supervisor Password:");
+            if(pass === "admin") { document.getElementById('admin-overlay').style.display = 'flex'; renderAdminLogs(); } 
+            else { alert("Unauthorized."); }
+        }
+        function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
+    </script>
+</body>
+</html>
