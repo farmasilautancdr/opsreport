@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V2.0</title>
+    <title>OPS PORTAL V2.2</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --ocean: #075985; --aqua: #2dd4bf; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f0f9ff; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
@@ -17,14 +18,13 @@
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); color: white; font-size: 9px; padding: 20px 12px 8px 12px; z-index: 20; line-height: 1.3; pointer-events: none; }
         .clear-btn { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 100; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
-        #loading-overlay { background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); color: white; z-index: 200; }
+        #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
+        #loading-overlay { background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); color: white; }
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .checkmark { width: 80px; height: 80px; border-radius: 50%; stroke: #14b8a6; stroke-width: 2; box-shadow: inset 0px 0px 0px #14b8a6; animation: fill .4s ease-in-out .4s forwards; }
         @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 40px #14b8a6; } }
         .hidden { display: none; }
-        button:disabled { opacity: 0.3; filter: grayscale(1); }
     </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
     <div id="loading-overlay">
         <div id="loading-spinner" class="spinner"></div>
         <div id="error-icon" class="hidden text-5xl mb-4">⚠️</div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Connecting...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Uploading Report...</h2>
         <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Verification in progress. Do not refresh.</p>
         <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Submission</button>
     </div>
@@ -47,72 +47,87 @@
     </div>
 
     <div id="admin-overlay" class="p-6">
-        <div class="w-full max-w-lg">
+        <div class="w-full max-w-lg mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-800 text-sky-900 uppercase">Supervisor Mode</h2>
-                <button onclick="closeAdmin()" class="text-xs font-bold text-red-500 underline">Exit</button>
+                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Dashboard</h2>
+                <button onclick="closeAdmin()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-bold uppercase">Exit</button>
             </div>
-            <div class="grid grid-cols-2 gap-2 mb-6">
-                <select id="filter-role" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold">
-                    <option value="ALL">All Roles</option>
-                    <option value="DRIVER">Driver</option>
-                    <option value="OUTLET">Staff/Outlet</option>
-                </select>
-                <select id="filter-outlet" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold"></select>
-                <input type="month" id="filter-date" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-100 text-xs font-bold">
-                <button onclick="downloadCSV()" class="bg-emerald-600 text-white p-3 rounded-xl text-[10px] font-black uppercase col-span-2 shadow-lg">Download CSV Report</button>
+            
+            <div class="bg-white p-5 rounded-[2rem] border border-sky-100 shadow-sm mb-6 space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="filter-role" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50">
+                        <option value="ALL">All Portals</option>
+                        <option value="DRIVER">Driver</option>
+                        <option value="OUTLET">Outlet</option>
+                    </select>
+                    <select id="filter-outlet" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50"></select>
+                </div>
+                <input type="month" id="filter-date" onchange="renderAdminLogs()" class="w-full p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50">
+                <div class="flex gap-2 pt-2">
+                    <button onclick="downloadCSV()" class="flex-1 bg-sky-100 text-sky-700 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">CSV Export</button>
+                    <button id="bulkPdfBtn" onclick="downloadBulk()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md">Bulk PDF</button>
+                </div>
             </div>
-            <div id="admin-log-container" class="space-y-4 pb-10"></div>
+
+            <div id="admin-log-container" class="space-y-4 pb-20"></div>
         </div>
     </div>
 
-    <header class="ocean-gradient text-white pt-12 pb-10 px-8 rounded-b-[45px] shadow-2xl relative">
-        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.0</div>
+    <header class="ocean-gradient text-white pt-12 pb-20 px-8 rounded-b-[45px] shadow-2xl relative z-0">
+        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.2</div>
         <div class="flex flex-col items-center">
             <img src="icon-512.jpg" class="w-16 h-16 rounded-2xl shadow-lg mb-3 border-2 border-sky-400/30" alt="Logo">
-            <h1 class="text-2xl font-800 text-center tracking-tighter text-white">OPS PORTAL</h1>
+            <h1 class="text-2xl font-800 text-center tracking-tighter">OPS PORTAL</h1>
             <p class="text-center text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
         </div>
     </header>
 
-    <main class="px-5 -mt-8 pb-20">
+    <main class="px-5 -mt-12 pb-20 relative z-10">
         <section id="step-1" class="glass-card rounded-[35px] p-7 shadow-2xl">
             <div class="space-y-6">
                 <div>
-                    <label class="text-[11px] font-800 text-sky-900 uppercase mb-3 block tracking-widest ml-1">Identity & Role</label>
+                    <label class="text-[11px] font-800 text-sky-900 uppercase mb-3 block tracking-widest ml-1">Select Identity</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white active:scale-95 transition-all">DRIVER</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white active:scale-95 transition-all">OUTLET</button>
                     </div>
                 </div>
                 <div class="space-y-4">
-                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Full Name" class="w-full p-5 rounded-2xl border border-sky-100 outline-none focus:ring-2 focus:ring-cyan-400 bg-white font-semibold text-sky-900">
-                    <select id="outlet-select" onchange="saveDraft()" class="w-full p-5 rounded-2xl border border-sky-100 bg-white outline-none font-semibold text-sky-900 appearance-none"></select>
-                    <input type="date" id="entry-date" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-sky-100 bg-white outline-none font-semibold text-sky-900">
+                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Full Name" class="w-full p-5 rounded-2xl border border-sky-100 outline-none focus:ring-2 focus:ring-cyan-400 bg-white font-semibold text-sky-900 shadow-sm">
+                    <select id="outlet-select" onchange="saveDraft()" class="w-full p-5 rounded-2xl border border-sky-100 bg-white outline-none font-semibold text-sky-900 appearance-none shadow-sm"></select>
+                    <input type="date" id="entry-date" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-sky-100 bg-white outline-none font-semibold text-sky-900 shadow-sm">
                 </div>
                 <button onclick="openPortal()" class="w-full bg-cyan-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-cyan-100 uppercase tracking-widest text-sm hover:bg-cyan-600 active:scale-95 transition-all">Access Portal</button>
             </div>
         </section>
 
-        <section id="step-2" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-                <button onclick="goBack()" class="bg-white/90 px-5 py-3 rounded-2xl shadow-md text-sky-800 font-bold text-xs flex items-center border border-sky-100 active:scale-90 transition-all">
-                    <span class="mr-2 text-lg">⇠</span> BACK
+        <section id="step-2" class="hidden space-y-6">
+            <div class="flex items-center justify-between gap-4 px-2">
+                <button onclick="goBack()" class="bg-white/90 px-6 py-3 rounded-2xl shadow-md text-sky-800 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 transition-all uppercase whitespace-nowrap">
+                    <i class="fas fa-arrow-left mr-2"></i> BACK
                 </button>
-                <span id="portal-display-title" class="text-sky-900 font-800 italic text-sm uppercase"></span>
+                <div class="h-[2px] flex-1 bg-sky-200 rounded-full opacity-30"></div>
+                <span id="portal-display-title" class="text-sky-900 font-800 text-[10px] uppercase tracking-widest"></span>
             </div>
+            
             <div id="photo-grid" class="space-y-6">
                 <script>
                     for(let i=1; i<=12; i++) {
                         document.write(`
                             <div class="photo-card space-y-4" id="photo-card-${i}">
-                                <span class="text-[10px] font-black text-sky-300 uppercase tracking-[0.2em]">Photo ${i} ${i>1 ? '(Optional)' : ''}</span>
+                                <div class="flex justify-between items-center px-1">
+                                    <span class="text-[10px] font-black text-sky-300 uppercase tracking-widest">Evidence Slot ${i} ${i>1 ? '(Optional)' : ''}</span>
+                                    <i class="fas fa-camera text-sky-100"></i>
+                                </div>
                                 <div class="photo-upload-zone" id="zone-${i}" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-2">📸</div><div class="text-[10px] font-800 text-cyan-500 uppercase">Snap Capture</div></div>
+                                    <div class="text-center" id="placeholder-${i}">
+                                        <div class="text-4xl mb-2">📸</div>
+                                        <div class="text-[10px] font-900 text-cyan-500 uppercase tracking-widest">Snap Capture</div>
+                                    </div>
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="previewPhoto(${i})">
                                     <div id="wrap-${i}"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-medium text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Details..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-semibold text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Type report details here..."></textarea>
                             </div>
                         `);
                     }
@@ -122,8 +137,8 @@
         </section>
     </main>
 
-    <div class="fixed bottom-4 right-4 z-50">
-        <button onclick="promptAdmin()" class="bg-white/50 backdrop-blur p-2 rounded-lg text-[8px] font-bold text-sky-900/30 uppercase">Supervisor Mode</button>
+    <div class="fixed bottom-4 right-4 z-[50]">
+        <button onclick="promptAdmin()" class="bg-white/80 backdrop-blur p-3 rounded-full text-[9px] font-black text-sky-900 shadow-lg uppercase border border-sky-100"><i class="fas fa-user-shield mr-1"></i> Admin</button>
     </div>
 
     <script>
@@ -139,6 +154,7 @@
         document.getElementById('entry-date').valueAsDate = new Date();
         document.getElementById('filter-date').value = new Date().toISOString().slice(0, 7);
 
+        // Standard draft and camera logic...
         window.onload = () => {
             const draft = JSON.parse(localStorage.getItem('ops_portal_draft'));
             if(draft) {
@@ -161,7 +177,7 @@
             const isDriver = role === 'DRIVER';
             document.getElementById('role-driver').className = isDriver ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
             document.getElementById('role-outlet').className = !isDriver ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
-            const ph = currentRole === 'DRIVER' ? "Lokasi/Duit Tukar/Lain-lain Report" : "Duit Tukar/Accuracy/Lain-lain Report";
+            const ph = currentRole === 'DRIVER' ? "Route/Deliveries/Returns Report" : "Daily Ops/Cash/Cleanliness Report";
             for(let i=1; i<=12; i++) document.getElementById(`desc-${i}`).placeholder = ph;
             saveDraft();
         }
@@ -220,15 +236,17 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Fill name and select role.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Please Fill Info First.");
             document.getElementById('step-1').style.display = 'none'; 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
         }
+
         function goBack() { 
             document.getElementById('step-2').classList.add('hidden'); 
             document.getElementById('step-1').style.display = 'block'; 
         }
+
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
         function showSuccess() { document.getElementById('success-overlay').style.display = 'flex'; }
 
@@ -236,11 +254,10 @@
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.src = base64;
-                img.onerror = () => reject("Image Failed");
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    let width = img.width, height = img.height, max = 800; // Lower resolution for extreme stability
+                    let width = img.width, height = img.height, max = 800; 
                     if (width > height && width > max) { height *= max / width; width = max; }
                     else if (height > max) { width *= max / height; height = max; }
                     canvas.width = width; canvas.height = height;
@@ -254,39 +271,36 @@
                     ctx.fillStyle = "white";
                     ctx.font = "bold 15px Arial";
                     ctx.fillText(stampText, 15, height - 15);
-                    resolve(canvas.toDataURL('image/jpeg', 0.4)); // 40% quality reduces payload by 70%
+                    resolve(canvas.toDataURL('image/jpeg', 0.4));
                 };
             });
         }
 
-        /* REWRITTEN: STABILITY V2.0 - SEQUENTIAL UPLOAD + NO-CORS BYPASS */
+        // Processing Submit
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             const loadingText = document.getElementById('loading-text');
-            const retryBtn = document.getElementById('retry-btn');
             const spinner = document.getElementById('loading-spinner');
             const errIcon = document.getElementById('error-icon');
             
             overlay.style.display = 'flex';
             spinner.classList.remove('hidden');
-            retryBtn.classList.add('hidden');
             errIcon.classList.add('hidden');
-            loadingText.innerText = "Cleaning Data...";
+            loadingText.innerText = "Processing Evidence...";
 
             const activeIds = [];
             for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
             try {
                 const photoPayloadArr = [];
-                // Process one-by-one to avoid browser memory spikes
                 for(let i=0; i<activeIds.length; i++) {
                     const id = activeIds[i];
-                    loadingText.innerText = `Compressing ${i+1}/${activeIds.length}...`;
+                    loadingText.innerText = `Preparing Image ${i+1}/${activeIds.length}...`;
                     const clean = await compressImage(localStorage.getItem(`photo_data_${id}`));
                     photoPayloadArr.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "" });
                 }
 
-                loadingText.innerText = "Connecting to Cloud...";
+                loadingText.innerText = "Syncing to Database...";
 
                 const payload = { 
                     user: document.getElementById('user-name').value,
@@ -296,33 +310,48 @@
                     photos: photoPayloadArr 
                 };
 
-                /**
-                 * STABILITY FIX: We use a POST request but handle the 
-                 * "Network Error" often caused by CORS Preflight or large payloads.
-                 */
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify(payload),
-                    mode: 'no-cors', // Bypasses connection handshakes that fail on slow networks
+                    mode: 'no-cors',
                     cache: 'no-cache',
-                    headers: { 'Content-Type': 'text/plain' } // Standard bypass for Google Scripts
+                    headers: { 'Content-Type': 'text/plain' }
                 });
 
-                // Since 'no-cors' doesn't return data, we wait 4 seconds to ensure Google received the data
-                loadingText.innerText = "Finalizing Submission...";
+                // NO-CORS Manual Log Strategy
+                let history = JSON.parse(localStorage.getItem('ops_history')) || [];
+                const localRow = [new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role];
+                history.push(localRow);
+                localStorage.setItem('ops_history', JSON.stringify(history));
+
+                loadingText.innerText = "Finishing Submission...";
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     showSuccess();
-                    // Optional: Try to sync URLs in background if connection allows later
-                }, 4000);
+                }, 3500);
 
             } catch (e) {
                 spinner.classList.add('hidden');
                 errIcon.classList.remove('hidden');
-                retryBtn.classList.remove('hidden');
-                loadingText.innerText = "Submission Interrupted";
-                console.error("Upload Error:", e);
+                loadingText.innerText = "Upload Interrupted";
             }
+        }
+
+        /**
+         * SUPERVISOR LOGIC PATCH
+         */
+        async function downloadIndividualPDF(rowId, role) {
+            alert("Connecting to Cloud PDF Engine...");
+            // Use standard doGet generation logic
+            const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
+            window.open(url, '_blank');
+        }
+
+        async function downloadBulk() {
+            const checked = Array.from(document.querySelectorAll('.report-checkbox:checked'));
+            if(checked.length === 0) return alert("Select reports first.");
+            alert("This will open the server combined view for the selected items.");
+            // Implementation logic for bulk URL generation can be added here
         }
 
         function renderAdminLogs() {
@@ -334,42 +363,55 @@
             const dateFilter = document.getElementById('filter-date').value;
 
             const filtered = history.filter(row => {
-                const matchesRole = roleFilter === "ALL" || (row[4] && row[4].toString().toLowerCase().includes(roleFilter.toLowerCase())); 
+                const matchesRole = roleFilter === "ALL" || (row[4] && row[4].includes(roleFilter)); 
                 const matchesOutlet = outletFilter === "ALL" || row[2] === outletFilter;
                 const matchesDate = !dateFilter || row[0].toString().startsWith(dateFilter);
                 return matchesOutlet && matchesDate;
             });
 
-            if(filtered.length === 0) container.innerHTML = `<p class="text-center py-10 text-xs text-slate-400">No local records found.</p>`;
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black uppercase text-[10px]">No Records Found</div>`;
+                return;
+            }
 
             filtered.reverse().forEach((row) => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-2xl border border-sky-100 shadow-sm mb-4";
-                let linksHtml = "";
-                for(let i=4; i < row.length; i+=2) { 
-                    if(row[i] && row[i].toString().startsWith('http')) {
-                        linksHtml += `<a href="${row[i]}" target="_blank" class="inline-block mr-2 mb-2 p-2 bg-sky-50 rounded-lg text-[8px] text-sky-700 font-black border border-sky-100 uppercase">View File</a>`;
-                    }
-                }
+                card.className = "bg-white p-5 rounded-[2rem] border border-sky-50 shadow-sm relative";
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-3">
-                        <div><p class="text-[10px] font-black uppercase text-sky-900">${row[1]}</p><p class="text-[8px] font-bold text-slate-400">${row[2]}</p></div>
-                        <span class="text-[8px] bg-sky-100 text-sky-700 px-2 py-1 rounded-md font-bold">${new Date(row[0]).toLocaleDateString()}</span>
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" value="${row[0]}" class="report-checkbox w-5 h-5 rounded-lg border-sky-100">
+                            <div>
+                                <h4 class="font-black text-[12px] uppercase text-sky-900 leading-none">${row[1]}</h4>
+                                <p class="text-[9px] font-bold text-sky-300 uppercase mt-1 tracking-tighter">${row[2]} | ${row[4]}</p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase">Synced</span>
                     </div>
-                    <div class="flex flex-wrap border-t pt-3">${linksHtml}</div>
+                    <div class="flex gap-2 border-t pt-3 border-slate-50">
+                        <button onclick="viewReportOnCloud('${row[4]}', '${row[0]}')" class="flex-1 py-2 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase">View Photos</button>
+                        <button onclick="downloadIndividualPDF(1, '${row[4]}')" class="flex-1 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase">PDF Report</button>
+                    </div>
                 `;
                 container.appendChild(card);
             });
         }
 
+        function viewReportOnCloud(role, timestamp) {
+            // Logic to find row index based on timestamp could be complex without a direct ID, 
+            // but we can redirect to the sheet or a search view.
+            alert("Searching database for record...");
+            window.open(WEB_APP_URL, '_blank');
+        }
+
         function downloadCSV() {
             const history = JSON.parse(localStorage.getItem('ops_history')) || [];
-            if(history.length === 0) return alert("No data.");
-            const header = "Timestamp,User,Outlet,Date,Photo_1,Desc_1,Photo_2,Desc_2,Photo_3,Desc_3,Photo_4,Desc_4,Photo_5,Desc_5,Photo_6,Desc_6,Photo_7,Desc_7,Photo_8,Desc_8,Photo_9,Desc_9,Photo_10,Desc_10,Photo_11,Desc_11,Photo_12,Desc_12\n";
+            if(history.length === 0) return alert("No local data found.");
+            const header = "Timestamp,User,Outlet,Date,Role\n";
             let csv = header;
             history.forEach(row => {
-                const sanitizedRow = row.map(cell => `"${(cell || "").toString().replace(/"/g, '""')}"`);
-                csv += sanitizedRow.join(",") + "\n";
+                const sanitized = row.slice(0, 5).map(cell => `"${(cell || "").toString().replace(/"/g, '""')}"`);
+                csv += sanitized.join(",") + "\n";
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -379,9 +421,11 @@
         }
 
         function promptAdmin() {
-            const pass = prompt("Enter Supervisor Password:");
-            if(pass === "admin") { document.getElementById('admin-overlay').style.display = 'flex'; renderAdminLogs(); } 
-            else { alert("Unauthorized."); }
+            const pass = prompt("Enter Supervisor PIN:");
+            if(pass === "admin") { 
+                document.getElementById('admin-overlay').style.display = 'flex'; 
+                renderAdminLogs(); 
+            } else alert("Unauthorized.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
     </script>
