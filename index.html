@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V2.2</title>
+    <title>OPS PORTAL V2.3</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
         <div id="loading-spinner" class="spinner"></div>
         <div id="error-icon" class="hidden text-5xl mb-4">⚠️</div>
         <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Uploading Report...</h2>
-        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Verification in progress. Do not refresh.</p>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Securing data to Cloud Storage. Please wait...</p>
         <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Submission</button>
     </div>
 
@@ -42,8 +42,8 @@
             <circle cx="26" cy="26" r="25" fill="none" stroke="#14b8a6" stroke-width="2"/>
             <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" stroke="white" stroke-width="4"/>
         </svg>
-        <h2 class="text-2xl font-800 text-sky-900 mt-6 uppercase tracking-widest">Success</h2>
-        <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">New Entry</button>
+        <h2 class="text-2xl font-800 text-sky-900 mt-6 uppercase tracking-widest">Sent Successfully</h2>
+        <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">Close</button>
     </div>
 
     <div id="admin-overlay" class="p-6">
@@ -73,20 +73,19 @@
         </div>
     </div>
 
-    <header class="ocean-gradient text-white pt-12 pb-20 px-8 rounded-b-[45px] shadow-2xl relative z-0">
-        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.2</div>
+    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[45px] shadow-2xl relative z-0">
+        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.3</div>
         <div class="flex flex-col items-center">
-            <img src="icon-512.jpg" class="w-16 h-16 rounded-2xl shadow-lg mb-3 border-2 border-sky-400/30" alt="Logo">
-            <h1 class="text-2xl font-800 text-center tracking-tighter">OPS PORTAL</h1>
+            <h1 class="text-3xl font-900 text-center tracking-tighter">OPS PORTAL</h1>
             <p class="text-center text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
         </div>
     </header>
 
-    <main class="px-5 -mt-12 pb-20 relative z-10">
+    <main class="px-5 -mt-16 pb-20 relative z-10">
         <section id="step-1" class="glass-card rounded-[35px] p-7 shadow-2xl">
             <div class="space-y-6">
                 <div>
-                    <label class="text-[11px] font-800 text-sky-900 uppercase mb-3 block tracking-widest ml-1">Select Identity</label>
+                    <label class="text-[11px] font-800 text-sky-900 uppercase mb-3 block tracking-widest ml-1">Identity & Role</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white active:scale-95 transition-all">DRIVER</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white active:scale-95 transition-all">OUTLET</button>
@@ -102,32 +101,28 @@
         </section>
 
         <section id="step-2" class="hidden space-y-6">
-            <div class="flex items-center justify-between gap-4 px-2">
-                <button onclick="goBack()" class="bg-white/90 px-6 py-3 rounded-2xl shadow-md text-sky-800 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 transition-all uppercase whitespace-nowrap">
-                    <i class="fas fa-arrow-left mr-2"></i> BACK
+            <div class="flex items-center gap-3">
+                <button onclick="goBack()" class="bg-white px-5 py-3 rounded-2xl shadow-md text-sky-800 font-bold text-[11px] flex items-center border border-sky-100 active:scale-90 transition-all uppercase whitespace-nowrap">
+                    <span class="mr-2 text-base">⇠</span> BACK
                 </button>
-                <div class="h-[2px] flex-1 bg-sky-200 rounded-full opacity-30"></div>
-                <span id="portal-display-title" class="text-sky-900 font-800 text-[10px] uppercase tracking-widest"></span>
+                <div class="flex-1 bg-sky-800/10 h-[2px] rounded-full"></div>
+                <span id="portal-display-title" class="text-sky-900 font-800 italic text-xs uppercase tracking-tighter"></span>
             </div>
-            
             <div id="photo-grid" class="space-y-6">
                 <script>
                     for(let i=1; i<=12; i++) {
                         document.write(`
                             <div class="photo-card space-y-4" id="photo-card-${i}">
                                 <div class="flex justify-between items-center px-1">
-                                    <span class="text-[10px] font-black text-sky-300 uppercase tracking-widest">Evidence Slot ${i} ${i>1 ? '(Optional)' : ''}</span>
+                                    <span class="text-[10px] font-black text-sky-300 uppercase tracking-widest">Evidence Slot ${i}</span>
                                     <i class="fas fa-camera text-sky-100"></i>
                                 </div>
                                 <div class="photo-upload-zone" id="zone-${i}" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}">
-                                        <div class="text-4xl mb-2">📸</div>
-                                        <div class="text-[10px] font-900 text-cyan-500 uppercase tracking-widest">Snap Capture</div>
-                                    </div>
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-2">📸</div><div class="text-[10px] font-800 text-cyan-500 uppercase">Snap Capture</div></div>
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="previewPhoto(${i})">
                                     <div id="wrap-${i}"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-semibold text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Type report details here..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-medium text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Details..."></textarea>
                             </div>
                         `);
                     }
@@ -138,7 +133,7 @@
     </main>
 
     <div class="fixed bottom-4 right-4 z-[50]">
-        <button onclick="promptAdmin()" class="bg-white/80 backdrop-blur p-3 rounded-full text-[9px] font-black text-sky-900 shadow-lg uppercase border border-sky-100"><i class="fas fa-user-shield mr-1"></i> Admin</button>
+        <button onclick="promptAdmin()" class="bg-white/50 backdrop-blur p-3 rounded-full text-[9px] font-black text-sky-900 shadow-lg uppercase border border-sky-100"><i class="fas fa-user-shield mr-1"></i> Admin</button>
     </div>
 
     <script>
@@ -154,7 +149,6 @@
         document.getElementById('entry-date').valueAsDate = new Date();
         document.getElementById('filter-date').value = new Date().toISOString().slice(0, 7);
 
-        // Standard draft and camera logic...
         window.onload = () => {
             const draft = JSON.parse(localStorage.getItem('ops_portal_draft'));
             if(draft) {
@@ -236,17 +230,12 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Please Fill Info First.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Fill name and select role.");
             document.getElementById('step-1').style.display = 'none'; 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
         }
-
-        function goBack() { 
-            document.getElementById('step-2').classList.add('hidden'); 
-            document.getElementById('step-1').style.display = 'block'; 
-        }
-
+        function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').style.display = 'block'; }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
         function showSuccess() { document.getElementById('success-overlay').style.display = 'flex'; }
 
@@ -276,13 +265,11 @@
             });
         }
 
-        // Processing Submit
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             const loadingText = document.getElementById('loading-text');
             const spinner = document.getElementById('loading-spinner');
             const errIcon = document.getElementById('error-icon');
-            
             overlay.style.display = 'flex';
             spinner.classList.remove('hidden');
             errIcon.classList.add('hidden');
@@ -300,7 +287,7 @@
                     photoPayloadArr.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "" });
                 }
 
-                loadingText.innerText = "Syncing to Database...";
+                loadingText.innerText = "Uploading Report...";
 
                 const payload = { 
                     user: document.getElementById('user-name').value,
@@ -310,6 +297,13 @@
                     photos: photoPayloadArr 
                 };
 
+                // MANUALLY CACHE TO SUPERVISOR FEED BEFORE NETWORK CALL
+                // This ensures that even if no-cors silent fails, the supervisor sees the attempt
+                let history = JSON.parse(localStorage.getItem('ops_history')) || [];
+                const localRow = [new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role];
+                history.push(localRow);
+                localStorage.setItem('ops_history', JSON.stringify(history));
+
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify(payload),
@@ -318,13 +312,7 @@
                     headers: { 'Content-Type': 'text/plain' }
                 });
 
-                // NO-CORS Manual Log Strategy
-                let history = JSON.parse(localStorage.getItem('ops_history')) || [];
-                const localRow = [new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role];
-                history.push(localRow);
-                localStorage.setItem('ops_history', JSON.stringify(history));
-
-                loadingText.innerText = "Finishing Submission...";
+                loadingText.innerText = "Finalizing Submission...";
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     showSuccess();
@@ -333,16 +321,12 @@
             } catch (e) {
                 spinner.classList.add('hidden');
                 errIcon.classList.remove('hidden');
-                loadingText.innerText = "Upload Interrupted";
+                loadingText.innerText = "Submission Interrupted";
             }
         }
 
-        /**
-         * SUPERVISOR LOGIC PATCH
-         */
         async function downloadIndividualPDF(rowId, role) {
             alert("Connecting to Cloud PDF Engine...");
-            // Use standard doGet generation logic
             const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
             window.open(url, '_blank');
         }
@@ -350,8 +334,10 @@
         async function downloadBulk() {
             const checked = Array.from(document.querySelectorAll('.report-checkbox:checked'));
             if(checked.length === 0) return alert("Select reports first.");
-            alert("This will open the server combined view for the selected items.");
-            // Implementation logic for bulk URL generation can be added here
+            const ids = checked.map(c => c.value).join(',');
+            alert("Generating combined document for " + checked.length + " reports...");
+            const url = `${WEB_APP_URL}?action=combinedPDF&ids=${ids}`;
+            window.open(url, '_blank');
         }
 
         function renderAdminLogs() {
@@ -370,17 +356,19 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black uppercase text-[10px]">No Records Found</div>`;
+                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black uppercase text-[10px]">No local records found.</div>`;
                 return;
             }
 
-            filtered.reverse().forEach((row) => {
+            filtered.reverse().forEach((row, index) => {
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-[2rem] border border-sky-50 shadow-sm relative";
+                // ID for bulk PDF is ID|ROLE
+                const bulkValue = `${filtered.length - index}|${row[4]}`;
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-3">
                         <div class="flex items-center gap-3">
-                            <input type="checkbox" value="${row[0]}" class="report-checkbox w-5 h-5 rounded-lg border-sky-100">
+                            <input type="checkbox" value="${bulkValue}" class="report-checkbox w-5 h-5 rounded-lg border-sky-100">
                             <div>
                                 <h4 class="font-black text-[12px] uppercase text-sky-900 leading-none">${row[1]}</h4>
                                 <p class="text-[9px] font-bold text-sky-300 uppercase mt-1 tracking-tighter">${row[2]} | ${row[4]}</p>
@@ -389,19 +377,12 @@
                         <span class="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase">Synced</span>
                     </div>
                     <div class="flex gap-2 border-t pt-3 border-slate-50">
-                        <button onclick="viewReportOnCloud('${row[4]}', '${row[0]}')" class="flex-1 py-2 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase">View Photos</button>
-                        <button onclick="downloadIndividualPDF(1, '${row[4]}')" class="flex-1 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase">PDF Report</button>
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${filtered.length - index}', '_blank')" class="flex-1 py-2 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase">View Report</button>
+                        <button onclick="downloadIndividualPDF(${filtered.length - index}, '${row[4]}')" class="flex-1 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase">PDF</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
-        }
-
-        function viewReportOnCloud(role, timestamp) {
-            // Logic to find row index based on timestamp could be complex without a direct ID, 
-            // but we can redirect to the sheet or a search view.
-            alert("Searching database for record...");
-            window.open(WEB_APP_URL, '_blank');
         }
 
         function downloadCSV() {
@@ -422,10 +403,8 @@
 
         function promptAdmin() {
             const pass = prompt("Enter Supervisor PIN:");
-            if(pass === "admin") { 
-                document.getElementById('admin-overlay').style.display = 'flex'; 
-                renderAdminLogs(); 
-            } else alert("Unauthorized.");
+            if(pass === "admin") { document.getElementById('admin-overlay').style.display = 'flex'; renderAdminLogs(); } 
+            else alert("Unauthorized.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
     </script>
