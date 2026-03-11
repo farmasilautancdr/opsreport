@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V1.8</title>
+    <title>OPS PORTAL V1.9</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); color: white; font-size: 9px; padding: 20px 12px 8px 12px; z-index: 20; line-height: 1.3; pointer-events: none; }
         .clear-btn { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 100; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
-        #loading-overlay { background: rgba(7, 89, 133, 0.95); backdrop-filter: blur(10px); color: white; z-index: 200; }
+        #loading-overlay { background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(15px); color: white; z-index: 200; }
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .checkmark { width: 80px; height: 80px; border-radius: 50%; stroke: #14b8a6; stroke-width: 2; box-shadow: inset 0px 0px 0px #14b8a6; animation: fill .4s ease-in-out .4s forwards; }
@@ -32,9 +32,9 @@
     <div id="loading-overlay">
         <div id="loading-spinner" class="spinner"></div>
         <div id="error-icon" class="hidden text-5xl mb-4">⚠️</div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Initializing...</h2>
-        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Large files detected. Keeping connection alive...</p>
-        <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Upload</button>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white">Connecting...</h2>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Optimizing images for stable upload...</p>
+        <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Submission</button>
     </div>
 
     <div id="success-overlay">
@@ -67,7 +67,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-12 pb-10 px-8 rounded-b-[45px] shadow-2xl relative">
-        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V1.8</div>
+        <div class="absolute top-4 right-8 text-[10px] font-bold text-sky-300 opacity-60">V1.9</div>
         <div class="flex flex-col items-center">
             <img src="icon-512.jpg" class="w-16 h-16 rounded-2xl shadow-lg mb-3 border-2 border-sky-400/30" alt="Logo">
             <h1 class="text-2xl font-800 text-center tracking-tighter text-white">OPS PORTAL</h1>
@@ -96,8 +96,8 @@
 
         <section id="step-2" class="hidden">
             <div class="flex items-center justify-between mb-4">
-                <button onclick="goBack()" class="bg-white/90 px-5 py-3 rounded-2xl shadow-md text-sky-800 font-bold text-xs flex items-center border border-sky-100 active:scale-90 transition-all">
-                    <span class="mr-2 text-lg">⇠</span> BACK
+                <button onclick="goBack()" class="bg-white/90 px-5 py-3 rounded-2xl shadow-md text-sky-800 font-bold text-[10px] flex items-center border border-sky-100 active:scale-90 transition-all uppercase tracking-tighter">
+                    <span class="mr-2 text-base">⇠</span> BACK
                 </button>
                 <span id="portal-display-title" class="text-sky-900 font-800 italic text-sm uppercase"></span>
             </div>
@@ -232,7 +232,6 @@
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
         function showSuccess() { document.getElementById('success-overlay').style.display = 'flex'; }
 
-        /* FIXED: IMAGE STABILITY LOGIC */
         async function compressImage(base64) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
@@ -241,20 +240,20 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    // STABILITY: Lower resolution to 800px to avoid timeouts
                     let width = img.width, height = img.height, max = 800; 
                     if (width > height && width > max) { height *= max / width; width = max; }
                     else if (height > max) { width *= max / height; height = max; }
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     const now = new Date();
-                    const stampText = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value} - ${now.toLocaleString()}`;
+                    const name = document.getElementById('user-name').value;
+                    const outlet = document.getElementById('outlet-select').value;
+                    const stampText = `${name} - ${outlet} - ${now.toLocaleString()}`;
                     ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
                     ctx.fillRect(0, height - 45, width, 45); 
                     ctx.fillStyle = "white";
                     ctx.font = "bold 16px Arial";
                     ctx.fillText(stampText, 20, height - 18);
-                    // QUALITY 0.4 for smallest file size with good clarity
                     resolve(canvas.toDataURL('image/jpeg', 0.4));
                 };
             });
@@ -263,27 +262,29 @@
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             const loadingText = document.getElementById('loading-text');
-            const spinner = document.getElementById('loading-spinner');
             const retryBtn = document.getElementById('retry-btn');
+            const spinner = document.getElementById('loading-spinner');
             const errIcon = document.getElementById('error-icon');
             
             overlay.style.display = 'flex';
             spinner.classList.remove('hidden');
             retryBtn.classList.add('hidden');
             errIcon.classList.add('hidden');
-            loadingText.innerText = "Packing Data...";
+            loadingText.innerText = "Optimizing Photos...";
 
             const activeIds = [];
             for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
             try {
-                const photoPayloadArr = await Promise.all(activeIds.map(async (id) => {
-                    const raw = localStorage.getItem(`photo_data_${id}`);
-                    const clean = await compressImage(raw);
-                    return { base64: clean, description: document.getElementById(`desc-${id}`).value || "" };
-                }));
+                // SEQUENTIAL PROCESSING TO PREVENT "NO CONNECTION" ERROR
+                const photoPayloadArr = [];
+                for(let id of activeIds) {
+                    loadingText.innerText = `Preparing Photo ${photoPayloadArr.length + 1}...`;
+                    const clean = await compressImage(localStorage.getItem(`photo_data_${id}`));
+                    photoPayloadArr.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "" });
+                }
 
-                loadingText.innerText = `Uploading ${photoPayloadArr.length} Photos...`;
+                loadingText.innerText = `Finalizing Submission...`;
 
                 const payload = { 
                     user: document.getElementById('user-name').value,
@@ -294,7 +295,7 @@
                 };
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 MIN TIMEOUT
+                const timeoutId = setTimeout(() => controller.abort(), 240000); // 4 Minute Timeout
 
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
@@ -302,8 +303,8 @@
                     signal: controller.signal
                 });
 
-                clearTimeout(timeoutId);
                 const result = await response.json();
+                clearTimeout(timeoutId);
 
                 if (response.ok && result.result === "success") {
                     let history = JSON.parse(localStorage.getItem('ops_history')) || [];
@@ -311,13 +312,14 @@
                     localStorage.setItem('ops_history', JSON.stringify(history));
                     overlay.style.display = 'none';
                     showSuccess();
-                } else { throw new Error(result.error); }
+                } else { throw new Error(result.error || "Connection Refused"); }
 
             } catch (e) {
                 spinner.classList.add('hidden');
                 errIcon.classList.remove('hidden');
                 retryBtn.classList.remove('hidden');
-                loadingText.innerText = "Internet Timed Out";
+                loadingText.innerText = "Network Error / Interrupted";
+                console.error("Submission Failed:", e);
             }
         }
 
@@ -336,7 +338,7 @@
                 return matchesOutlet && matchesDate;
             });
 
-            if(filtered.length === 0) container.innerHTML = `<p class="text-center py-10 text-xs">No records found.</p>`;
+            if(filtered.length === 0) container.innerHTML = `<p class="text-center py-10 text-xs text-slate-400">No submission records found.</p>`;
 
             filtered.reverse().forEach((row) => {
                 const card = document.createElement('div');
@@ -344,7 +346,7 @@
                 let linksHtml = "";
                 for(let i=4; i < row.length; i+=2) { 
                     if(row[i] && row[i].toString().startsWith('http')) {
-                        linksHtml += `<a href="${row[i]}" target="_blank" class="inline-block mr-2 mb-2 p-2 bg-sky-50 rounded-lg text-[8px] text-sky-700 font-black border border-sky-100 uppercase">View Image</a>`;
+                        linksHtml += `<a href="${row[i]}" target="_blank" class="inline-block mr-2 mb-2 p-2 bg-sky-50 rounded-lg text-[8px] text-sky-700 font-black border border-sky-100 uppercase">View File</a>`;
                     }
                 }
                 card.innerHTML = `
@@ -371,7 +373,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url; a.download = `OPS_PORTAL_LOG_${new Date().getTime()}.csv`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            a.click();
         }
 
         function promptAdmin() {
