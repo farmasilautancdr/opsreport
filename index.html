@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.3.1</title>
+    <title>OPS PORTAL V3.4</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -50,7 +50,7 @@
 
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center">Uploading Report...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing Report...</h2>
     </div>
 
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
@@ -89,12 +89,10 @@
         <div id="admin-log-container" class="p-6 space-y-10 pb-40"></div>
     </div>
 
-    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3.1</div>
-        <div class="flex flex-col items-center text-center">
-            <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
-            <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
-        </div>
+    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.4</div>
+        <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
+        <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
 
     <main class="px-5 -mt-16 pb-20 relative z-10">
@@ -159,6 +157,7 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwy58cuAW4o6ZMuvH98TWoBwnSFfxppFG-eg6kbZvzM1I9fNYHlejK6WVFj79fZwY1r5w/exec';
         const outlets = ["AJ", "B6", "BB", "BJR", "BP", "CDR", "CK", "DG", "DGD", "GB", "GBD", "GM", "HL", "HQ", "HQCT", "JL", "JLD", "JTH", "KB", "KBKK", "KBKS", "KBTJ", "KKR", "KL", "KMD", "KMN", "KMSK", "KS", "MC", "MLR", "MR", "PC", "PK", "PM", "PP", "PPK", "PSPD", "PT", "RJ", "SLS", "SMR", "ST", "TM", "TMD", "TMT", "TPOH", "TPT", "WM"];
         let currentRole = "";
+        let globalDatabase = [];
 
         const sel = document.getElementById('outlet-select');
         const adminSel = document.getElementById('filter-outlet');
@@ -202,25 +201,22 @@
         }
 
         function triggerCamera(id) { 
-            const el = document.getElementById(`cam-${id}`);
-            el.value = ""; // Clear to ensure onchange fires even if same photo is re-taken
-            el.click(); 
+            const input = document.getElementById(`cam-${id}`);
+            input.value = ""; // Clear to force trigger on mobile
+            input.click(); 
         }
 
-        // FIXED LOGIC: Capture & Immediate Ingestion
+        // V2.1 Logic: Instant raw attachment (deferred stamping)
         function previewLocalPhoto(input, id) {
             if(!input.files || !input.files[0]) return;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
-                const base64 = e.target.result;
-                // Persistent Save
-                localStorage.setItem(`photo_data_${id}`, base64);
-                // UI Injection - Re-building the wrap ensure refresh
-                displayStoredPhoto(id, base64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
+                const b64 = e.target.result;
+                localStorage.setItem(`photo_data_${id}`, b64);
+                displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
                 saveDraft();
                 validateSubmit();
-            }
+            };
             reader.readAsDataURL(input.files[0]);
         }
 
@@ -235,21 +231,17 @@
                     canvas.width = MAX;
                     canvas.height = img.height * scale;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
                     ctx.fillStyle = "rgba(0,0,0,0.7)";
                     ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
                     ctx.fillStyle = "#ffffff"; 
                     ctx.font = "bold 24px Arial";
-                    
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole + " PORTAL";
-                    const desc = document.getElementById(`desc-${idx}`).value || "No Details";
+                    const desc = document.getElementById(`desc-${idx}`).value || "Evidence";
                     const dateStr = new Date().toLocaleString();
-                    
                     const watermarkText = `${outlet} - ${name} - ${portal} - ${desc} - ${dateStr}`;
                     ctx.fillText(watermarkText, 30, canvas.height - 35);
-                    
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
             });
@@ -259,11 +251,9 @@
             const wrap = document.getElementById(`wrap-${id}`);
             const placeholder = document.getElementById(`placeholder-${id}`);
             if(placeholder) placeholder.classList.add('hidden');
-            
-            // Force a clean innerHTML update to re-render the image element
             wrap.innerHTML = `
-                <button class="clear-btn" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button>
-                <img src="${base64}" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; z-index:10;">
+                <button class="clear-btn pointer-events-auto" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button>
+                <img src="${base64}" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; z-index:10; border-radius:20px;">
                 <div class="timestamp-badge" style="z-index:20;">${meta}</div>
             `;
         }
@@ -284,7 +274,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Verify Login Info.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Login First.");
             document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " WORKSPACE"; 
@@ -296,14 +286,13 @@
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Uploading Report...";
-            
             const activeIds = [];
             for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
             try {
                 const photos = [];
                 for(let id of activeIds) {
+                    // Stamping deferred to this point for speed
                     const stampedB64 = await stampImageWithDescription(localStorage.getItem(`photo_data_${id}`), id);
                     photos.push({ base64: stampedB64, description: document.getElementById(`desc-${id}`).value || "Evidence" });
                 }
@@ -316,36 +305,103 @@
                     photos: photos 
                 };
 
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
                 history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
 
-                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     document.getElementById('success-overlay').classList.remove('hidden');
-                }, 3500);
+                }, 3000);
             } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
+        }
+
+        /* SUPERVISOR - LIVE CLOUD DATA ENGINE (Cross-Device Fix) */
+        async function fetchCloudData() {
+            const container = document.getElementById('admin-log-container');
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing All Devices...</div>`;
+            try {
+                const r = await fetch(WEB_APP_URL + "?action=fetchData");
+                const d = await r.json();
+                globalDatabase = d.history || [];
+                renderAdminLogs();
+            } catch (e) { 
+                console.error("Cloud Error", e);
+                renderAdminLogs(); // Fallback to local
+            }
+        }
+
+        function renderAdminLogs() {
+            const container = document.getElementById('admin-log-container');
+            container.innerHTML = "";
+            const roleFilter = document.getElementById('filter-role').value;
+            const outletFilter = document.getElementById('filter-outlet').value;
+            const dateFilter = document.getElementById('filter-date').value;
+
+            const filtered = globalDatabase.filter(row => {
+                const matchRole = roleFilter === "ALL" || row[4].toUpperCase() === roleFilter.toUpperCase(); 
+                const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
+                const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
+                return matchRole && matchOutlet && matchDate;
+            });
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Found</div>`;
+                return;
+            }
+
+            filtered.reverse().forEach((row, index) => {
+                const photos = row[5] || [];
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
+                let sliderHtml = photos.length > 0 ? `
+                    <div class="admin-slider mt-4">
+                        ${photos.map(p => `
+                            <div class="slider-item" onclick="openModalImage('${p.base64}')">
+                                <img src="${p.base64}">
+                                <div class="slider-desc">${p.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `<div class="text-center text-slate-300 py-8 italic uppercase tracking-widest text-[10px]">No Content</div>`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-4">
+                            <input type="checkbox" value="${filtered.length - index}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-slate-300 accent-sky-900">
+                            <div>
+                                <h4 class="font-black text-[13px] uppercase text-slate-800 leading-tight">${row[1]}</h4>
+                                <p class="text-[9px] font-black text-sky-500 mt-1 uppercase">${row[2]} • ${row[4]}</p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase">Cloud</span>
+                    </div>
+                    ${sliderHtml}
+                    <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${filtered.length - index}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase">View</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${filtered.length - index})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase">PDF</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
             try {
-                const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
-                const resp = await fetch(url);
+                const resp = await fetch(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`);
                 const result = await resp.json();
-                if (result.data) {
-                    const byteChars = atob(result.data);
-                    const byteNums = new Array(byteChars.length);
-                    for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-                    const blob = new Blob([new Uint8Array(byteNums)], {type: 'application/pdf'});
-                    const link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = `Report_${role}_${rowId}.pdf`;
-                    link.click();
-                } else { throw new Error(); }
+                const byteChars = atob(result.data);
+                const byteNums = new Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+                const blob = new Blob([new Uint8Array(byteNums)], {type: 'application/pdf'});
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `Report_${role}_${rowId}.pdf`;
+                link.click();
             } catch (e) { window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); } 
             finally { overlay.style.display = 'none'; }
         }
@@ -363,76 +419,16 @@
             modal.style.display = 'flex';
         }
 
-        function renderAdminLogs() {
-            const history = JSON.parse(localStorage.getItem('ops_history')) || [];
-            const container = document.getElementById('admin-log-container');
-            container.innerHTML = "";
-            const roleFilter = document.getElementById('filter-role').value;
-            const outletFilter = document.getElementById('filter-outlet').value;
-            const dateFilter = document.getElementById('filter-date').value;
-
-            const filtered = history.filter(row => {
-                const matchRole = roleFilter === "ALL" || row[4].toUpperCase() === roleFilter.toUpperCase(); 
-                const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
-                const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
-                return matchRole && matchOutlet && matchDate;
-            });
-
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Matches Found</div>`;
-                return;
-            }
-
-            filtered.reverse().forEach((row, index) => {
-                const realRowIdx = filtered.length - index;
-                const photos = row[5] || [];
-                const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                
-                let sliderHtml = photos.length > 0 ? `
-                    <div class="admin-slider mt-4">
-                        ${photos.map(p => `
-                            <div class="slider-item" onclick="openModalImage('${p.base64}')">
-                                <img src="${p.base64}">
-                                <div class="slider-desc">${p.description}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : `<div class="text-center text-slate-300 py-8 italic uppercase tracking-widest text-[10px]">No Content</div>`;
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-center gap-4">
-                            <input type="checkbox" value="${realRowIdx}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-slate-300 accent-sky-900">
-                            <div>
-                                <h4 class="font-black text-[13px] uppercase text-slate-800 leading-tight">${row[1]}</h4>
-                                <p class="text-[9px] font-black text-sky-500 mt-1 uppercase">${row[2]} • ${row[4]}</p>
-                            </div>
-                        </div>
-                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase">Synced</span>
-                    </div>
-                    ${sliderHtml}
-                    <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
-                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIdx}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase"><i class="fas fa-eye mr-2"></i> Browser</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase"><i class="fas fa-file-pdf mr-2"></i> PDF</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
         function promptAdmin() {
             if(prompt("Enter Access PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; 
-                renderAdminLogs(); 
+                fetchCloudData(); 
             } else alert("Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
         
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
         }
     </script>
 </body>
