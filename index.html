@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.3</title>
+    <title>OPS PORTAL V3.3.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -89,12 +89,10 @@
         <div id="admin-log-container" class="p-6 space-y-10 pb-40"></div>
     </div>
 
-    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3</div>
-        <div class="flex flex-col items-center text-center">
-            <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
-            <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
-        </div>
+    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3.1</div>
+        <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
+        <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
 
     <main class="px-5 -mt-16 pb-20 relative z-10">
@@ -121,8 +119,8 @@
                 <button onclick="goBack()" class="bg-white px-6 py-3 rounded-xl shadow-md text-sky-900 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 uppercase">
                     <i class="fas fa-chevron-left mr-2"></i> BACK
                 </button>
-                <div class="flex-1 text-right">
-                    <span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest mr-4"></span>
+                <div class="flex-1 text-right mr-4">
+                    <span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest"></span>
                 </div>
             </div>
             <div id="photo-grid" class="space-y-6">
@@ -201,16 +199,23 @@
             localStorage.setItem('ops_portal_draft', JSON.stringify(draft));
         }
 
-        function triggerCamera(id) { document.getElementById(`cam-${id}`).click(); }
+        function triggerCamera(id) { 
+            const input = document.getElementById(`cam-${id}`);
+            input.value = ""; // Reset value to ensure onchange fires even if same file
+            input.click(); 
+        }
 
-        // STEP 1: Persistent Local Capture - RE-LINKED Logic
+        // FIXED CAPTURE LOGIC - Verified for V3.3.1
         function previewLocalPhoto(id) {
             const file = document.getElementById(`cam-${id}`).files[0];
             if(!file) return;
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const base64 = e.target.result;
+                // Save to local persistence immediately
                 localStorage.setItem(`photo_data_${id}`, base64);
+                // Update the UI immediately
                 displayStoredPhoto(id, base64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
                 saveDraft();
                 validateSubmit();
@@ -218,7 +223,6 @@
             reader.readAsDataURL(file);
         }
 
-        // WATERMARK STAMPING ENGINE V3.3
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -252,8 +256,9 @@
 
         function displayStoredPhoto(id, base64, meta) {
             const wrap = document.getElementById(`wrap-${id}`);
-            document.getElementById(`placeholder-${id}`).classList.add('hidden');
-            wrap.innerHTML = `<button class="clear-btn" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button><img src="${base64}"><div class="timestamp-badge">${meta}</div>`;
+            const placeholder = document.getElementById(`placeholder-${id}`);
+            if(placeholder) placeholder.classList.add('hidden');
+            wrap.innerHTML = `<button class="clear-btn" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button><img src="${base64}" class="w-full h-full object-cover"><div class="timestamp-badge">${meta}</div>`;
         }
 
         function clearPhoto(id) {
@@ -317,11 +322,9 @@
             } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
         }
 
-        /* SUPERVISOR DASHBOARD V3.3 */
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Generating PDF...";
             try {
                 const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
                 const resp = await fetch(url);
@@ -369,7 +372,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Matches Found</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Matches</div>`;
                 return;
             }
 
@@ -419,10 +422,9 @@
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
         
-        // PWA Setup
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
             });
         }
     </script>
