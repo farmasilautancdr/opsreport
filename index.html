@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V2.4</title>
+    <title>OPS PORTAL V2.5</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -17,39 +17,37 @@
         .photo-upload-zone { width: 100%; height: 220px; border: 2px dashed #7dd3fc; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #f8fafc; cursor: pointer; }
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); color: white; font-size: 9px; padding: 20px 12px 8px 12px; z-index: 20; line-height: 1.3; pointer-events: none; }
-        .clear-btn { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
         #loading-overlay { background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); color: white; }
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .checkmark { width: 80px; height: 80px; border-radius: 50%; stroke: #14b8a6; stroke-width: 2; box-shadow: inset 0px 0px 0px #14b8a6; animation: fill .4s ease-in-out .4s forwards; }
-        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 40px #14b8a6; } }
-        .hidden { display: none; }
+        
+        /* New Horizontal Slider Styles */
+        .admin-photo-slider { display: flex; overflow-x: auto; gap: 12px; padding: 5px 2px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+        .admin-photo-item { flex: 0 0 85%; scroll-snap-align: center; background: #f8fafc; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .admin-photo-item img { width: 100%; height: 180px; object-fit: cover; }
+        .admin-photo-desc { padding: 10px; font-size: 10px; font-weight: 700; color: #075985; background: white; min-height: 45px; }
+        .admin-photo-slider::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
         <div id="loading-spinner" class="spinner"></div>
-        <div id="error-icon" class="hidden text-5xl mb-4">⚠️</div>
         <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6 text-white text-center">Uploading Report...</h2>
-        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Verification in progress. Do not refresh.</p>
-        <button id="retry-btn" onclick="processAllPortals()" class="hidden mt-8 px-8 py-3 bg-white text-sky-900 rounded-full font-black uppercase text-sm shadow-xl">Retry Submission</button>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70 text-white text-center px-10">Securing data to Cloud Storage...</p>
     </div>
 
     <div id="success-overlay">
-        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle cx="26" cy="26" r="25" fill="none" stroke="#14b8a6" stroke-width="2"/>
-            <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" stroke="white" stroke-width="4"/>
-        </svg>
-        <h2 class="text-2xl font-800 text-sky-900 mt-6 uppercase tracking-widest">Success</h2>
-        <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">New Entry</button>
+        <div class="text-6xl mb-4 text-emerald-500">✅</div>
+        <h2 class="text-2xl font-800 text-sky-900 mt-2 uppercase tracking-widest">Sent Successfully</h2>
+        <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">Done</button>
     </div>
 
     <div id="admin-overlay" class="p-6">
         <div class="w-full max-w-lg mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Dashboard</h2>
+                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Feed</h2>
                 <button onclick="closeAdmin()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-bold uppercase">Exit</button>
             </div>
             
@@ -64,20 +62,18 @@
                 </div>
                 <input type="month" id="filter-date" onchange="renderAdminLogs()" class="w-full p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50">
                 <button id="bulkPdfBtn" onclick="downloadBulk()" class="w-full bg-blue-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-md active:scale-95 transition-all">
-                    <i class="fas fa-file-medical mr-2"></i> Combined Bulk PDF
+                    <i class="fas fa-file-medical mr-2"></i> Download Selected Bulk PDF
                 </button>
             </div>
 
-            <div id="admin-log-container" class="space-y-4 pb-20"></div>
+            <div id="admin-log-container" class="space-y-6 pb-20"></div>
         </div>
     </div>
 
-    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[45px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.4</div>
-        <div class="flex flex-col items-center">
-            <h1 class="text-3xl font-900 text-center tracking-tighter">OPS PORTAL</h1>
-            <p class="text-center text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
-        </div>
+    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[45px] shadow-2xl relative z-0 text-center">
+        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.5</div>
+        <h1 class="text-3xl font-900 tracking-tighter">OPS PORTAL</h1>
+        <p class="text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
     </header>
 
     <main class="px-5 -mt-16 pb-20 relative z-10">
@@ -156,8 +152,7 @@
                 document.getElementById('entry-date').value = draft.date || new Date().toISOString().split('T')[0];
                 if(draft.role) selectRole(draft.role);
                 for(let i=1; i<=12; i++) {
-                    const savedDesc = draft.descriptions?.[i-1];
-                    if(savedDesc) document.getElementById(`desc-${i}`).value = savedDesc;
+                    if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
                     if(savedImg) displayStoredPhoto(i, savedImg, draft.photo_meta?.[i-1]);
                 }
@@ -167,9 +162,8 @@
 
         function selectRole(role) {
             currentRole = role;
-            const isDriver = role === 'DRIVER';
-            document.getElementById('role-driver').className = isDriver ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
-            document.getElementById('role-outlet').className = !isDriver ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
+            document.getElementById('role-driver').className = role === 'DRIVER' ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
+            document.getElementById('role-outlet').className = role === 'OUTLET' ? 'py-5 border-2 border-cyan-500 rounded-2xl font-black text-cyan-600 bg-cyan-50 shadow-inner' : 'py-5 border-2 border-sky-100 rounded-2xl font-bold text-sky-400 bg-white';
             saveDraft();
         }
 
@@ -192,7 +186,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const now = new Date();
-                const meta = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}\nTask: ${currentRole} Portal\n${now.toLocaleDateString('en-GB')} | ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+                const meta = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}\nTask: ${currentRole}\n${now.toLocaleDateString('en-GB')} | ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
                 localStorage.setItem(`photo_data_${id}`, e.target.result);
                 displayStoredPhoto(id, e.target.result, meta);
                 saveDraft();
@@ -222,27 +216,26 @@
             for(let i=1; i<=12; i++) if(localStorage.getItem(`photo_data_${i}`)) count++;
             const btn = document.getElementById('submit-btn');
             btn.disabled = count < 1;
-            if(count >= 1) btn.classList.replace('bg-slate-800', 'bg-cyan-600');
-            else btn.classList.replace('bg-cyan-600', 'bg-slate-800');
+            btn.classList.toggle('bg-cyan-600', count >= 1);
+            btn.classList.toggle('bg-slate-800', count < 1);
         }
 
         function openPortal() { 
             if(!document.getElementById('user-name').value || !currentRole) return alert("Fill name and select role.");
-            document.getElementById('step-1').style.display = 'none'; 
+            document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
         }
 
         function goBack() { 
             document.getElementById('step-2').classList.add('hidden'); 
-            document.getElementById('step-1').style.display = 'block'; 
+            document.getElementById('step-1').classList.remove('hidden'); 
         }
 
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
-        function showSuccess() { document.getElementById('success-overlay').style.display = 'flex'; }
 
         async function compressImage(base64) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const img = new Image();
                 img.src = base64;
                 img.onload = () => {
@@ -253,14 +246,10 @@
                     else if (height > max) { width *= max / height; height = max; }
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
-                    const now = new Date();
-                    const name = document.getElementById('user-name').value;
-                    const outlet = document.getElementById('outlet-select').value;
-                    const stampText = `${name} - ${outlet} - ${now.toLocaleString()}`;
+                    const stampText = `${document.getElementById('user-name').value} - ${new Date().toLocaleString()}`;
                     ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-                    ctx.fillRect(0, height - 45, width, 45); 
-                    ctx.fillStyle = "white";
-                    ctx.font = "bold 15px Arial";
+                    ctx.fillRect(0, height - 40, width, 40); 
+                    ctx.fillStyle = "white"; ctx.font = "bold 15px Arial";
                     ctx.fillText(stampText, 15, height - 15);
                     resolve(canvas.toDataURL('image/jpeg', 0.4));
                 };
@@ -269,79 +258,40 @@
 
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
-            const loadingText = document.getElementById('loading-text');
             overlay.style.display = 'flex';
-            loadingText.innerText = "Processing Evidence...";
-
+            
             const activeIds = [];
             for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
             try {
-                const photoPayloadArr = [];
-                for(let i=0; i<activeIds.length; i++) {
-                    const id = activeIds[i];
-                    loadingText.innerText = `Preparing Image ${i+1}/${activeIds.length}...`;
+                const photos = [];
+                for(let id of activeIds) {
                     const clean = await compressImage(localStorage.getItem(`photo_data_${id}`));
-                    photoPayloadArr.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "" });
+                    photos.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "" });
                 }
 
-                loadingText.innerText = "Uploading Report...";
+                const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
 
-                const payload = { 
-                    user: document.getElementById('user-name').value,
-                    role: currentRole,
-                    outlet: document.getElementById('outlet-select').value,
-                    date: document.getElementById('entry-date').value,
-                    photos: photoPayloadArr 
-                };
-
-                // Manually cache locally for supervisor dashboard (fix for no-cors delay)
+                // PRE-SAVE FOR SUPERVISOR DASHBOARD (Images included for instant view)
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
-                const localRow = [new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role];
-                history.push(localRow);
+                history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
 
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload),
-                    mode: 'no-cors',
-                    cache: 'no-cache'
-                });
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
 
-                loadingText.innerText = "Finalizing Submission...";
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    showSuccess();
-                }, 3500);
-
-            } catch (e) {
-                loadingText.innerText = "Submission Error";
-                setTimeout(() => { overlay.style.display = 'none'; }, 2000);
-            }
+                setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').style.display = 'flex'; }, 3000);
+            } catch (e) { alert("Error uploading."); overlay.style.display = 'none'; }
         }
 
-        /**
-         * SUPERVISOR LOGIC REVAMP V2.4
-         */
-        async function viewReportOnCloud(role, rowNumber) {
-            // Standard action getReport triggers generateReportHTML in GAS
-            const url = `${WEB_APP_URL}?action=getReport&role=${role}&row=${rowNumber}`;
-            window.open(url, '_blank');
+        /** SUPERVISOR MODE V2.5 REVAMP **/
+        function downloadIndividualPDF(role, rowId) {
+            window.open(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`, '_blank');
         }
 
-        async function downloadIndividualPDF(role, rowId) {
-            alert("Generating PDF...");
-            const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
-            window.open(url, '_blank');
-        }
-
-        async function downloadBulk() {
+        function downloadBulk() {
             const checked = Array.from(document.querySelectorAll('.report-checkbox:checked'));
             if(checked.length === 0) return alert("Select reports first.");
-            const ids = checked.map(c => c.value).join(','); // Format: row|role,row|role
-            alert("Generating Combined PDF for " + checked.length + " items...");
-            const url = `${WEB_APP_URL}?action=combinedPDF&ids=${ids}`;
-            window.open(url, '_blank');
+            window.open(`${WEB_APP_URL}?action=combinedPDF&ids=${checked.map(c => c.value).join(',')}`, '_blank');
         }
 
         function renderAdminLogs() {
@@ -353,41 +303,50 @@
             const dateFilter = document.getElementById('filter-date').value;
 
             const filtered = history.filter(row => {
-                const matchesRole = roleFilter === "ALL" || (row[4] && row[4].includes(roleFilter)); 
+                const matchesRole = roleFilter === "ALL" || row[4] === roleFilter; 
                 const matchesOutlet = outletFilter === "ALL" || row[2] === outletFilter;
                 const matchesDate = !dateFilter || row[0].toString().startsWith(dateFilter);
                 return matchesOutlet && matchesDate;
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black uppercase text-[10px]">No local records found.</div>`;
+                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black text-[10px]">NO REPORTS FOUND</div>`;
                 return;
             }
 
             filtered.reverse().forEach((row, index) => {
-                const realRowIndex = filtered.length - index;
-                const bulkValue = `${realRowIndex}|${row[4]}`;
+                const realIndex = filtered.length - index;
+                const photos = row[5] || [];
                 
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-[2rem] border border-sky-50 shadow-sm relative";
+                
+                let photoHtml = photos.length > 0 ? `
+                    <div class="admin-photo-slider mt-4">
+                        ${photos.map(p => `
+                            <div class="admin-photo-item">
+                                <img src="${p.base64}">
+                                <div class="admin-photo-desc">${p.description || 'No description'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div class="text-[9px] text-slate-300 mt-4 italic text-center">No images attached</div>';
+
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
+                    <div class="flex justify-between items-start">
                         <div class="flex items-center gap-3">
-                            <input type="checkbox" value="${bulkValue}" class="report-checkbox w-5 h-5 rounded-lg border-sky-100">
+                            <input type="checkbox" value="${realIndex}|${row[4]}" class="report-checkbox w-5 h-5 rounded-lg border-sky-100">
                             <div>
-                                <h4 class="font-black text-[12px] uppercase text-sky-900 leading-none">${row[1]}</h4>
-                                <p class="text-[9px] font-bold text-sky-300 uppercase mt-1 tracking-tighter">${row[2]} | ${row[4]} Portal</p>
+                                <h4 class="font-black text-[12px] uppercase text-sky-900">${row[1]}</h4>
+                                <p class="text-[9px] font-bold text-sky-300 uppercase">${row[2]} | ${row[4]} PORTAL</p>
                             </div>
                         </div>
-                        <span class="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase">Synced</span>
+                        <span class="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-1 rounded-lg">SYNCED</span>
                     </div>
+                    ${photoHtml}
                     <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-50">
-                        <button onclick="viewReportOnCloud('${row[4]}', ${realRowIndex})" class="py-3 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-slate-100 active:scale-95 transition-all">
-                            <i class="fas fa-eye mr-1"></i> View Images
-                        </button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIndex})" class="py-3 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase border border-blue-100 active:scale-95 transition-all">
-                            <i class="fas fa-file-pdf mr-1"></i> PDF Export
-                        </button>
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realIndex}', '_blank')" class="py-3 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-external-link-alt mr-1"></i> Full View</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${realIndex})" class="py-3 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-file-pdf mr-1"></i> PDF</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -395,14 +354,11 @@
         }
 
         function promptAdmin() {
-            const pass = prompt("Enter Supervisor PIN:");
-            if(pass === "admin") { 
-                document.getElementById('admin-overlay').style.display = 'flex'; 
-                renderAdminLogs(); 
+            if(prompt("Enter Supervisor PIN:") === "admin") { 
+                document.getElementById('admin-overlay').style.display = 'flex'; renderAdminLogs(); 
             } else alert("Unauthorized.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
     </script>
 </body>
 </html>
-
