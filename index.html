@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V2.6</title>
+    <title>OPS PORTAL V2.7</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -17,6 +17,7 @@
         .photo-upload-zone { width: 100%; height: 220px; border: 2px dashed #7dd3fc; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #f8fafc; cursor: pointer; }
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); color: white; font-size: 9px; padding: 20px 12px 8px 12px; z-index: 20; line-height: 1.3; pointer-events: none; }
+        .clear-btn { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
         #loading-overlay { background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); color: white; }
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; margin-bottom: 20px; }
@@ -28,19 +29,19 @@
         .admin-slider::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
         .slider-item { flex: 0 0 80%; scroll-snap-align: center; background: #f8fafc; border-radius: 15px; border: 1px solid #e0f2fe; overflow: hidden; }
         .slider-item img { width: 100%; height: 160px; object-fit: cover; background: #eee; }
-        .slider-desc { padding: 10px; font-size: 10px; color: #0369a1; font-weight: 700; line-height: 1.4; min-height: 40px; }
+        .slider-desc { padding: 10px; font-size: 10px; color: #0369a1; font-weight: 700; line-height: 1.4; min-height: 40px; background: white; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
         <div id="loading-spinner" class="spinner"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Uploading Report...</h2>
-        <p id="loading-subtext" class="text-xs mt-2 opacity-70">Securing data to Cloud Storage...</p>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing...</h2>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70">Securing data. Please do not close.</p>
     </div>
 
     <div id="success-overlay">
-        <div class="text-emerald-500 text-6xl mb-4">✔</div>
+        <div class="text-emerald-500 text-6xl mb-4"><i class="fas fa-check-circle"></i></div>
         <h2 class="text-2xl font-800 text-sky-900 uppercase tracking-widest">Success</h2>
         <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">New Entry</button>
     </div>
@@ -48,7 +49,7 @@
     <div id="admin-overlay" class="p-6">
         <div class="w-full max-w-lg mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Feed</h2>
+                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Dashboard</h2>
                 <button onclick="closeAdmin()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-bold uppercase">Exit</button>
             </div>
             
@@ -72,7 +73,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[45px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.6</div>
+        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.7</div>
         <div class="flex flex-col items-center text-center">
             <h1 class="text-3xl font-900 tracking-tighter">OPS PORTAL</h1>
             <p class="text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
@@ -155,10 +156,9 @@
                 document.getElementById('entry-date').value = draft.date || new Date().toISOString().split('T')[0];
                 if(draft.role) selectRole(draft.role);
                 for(let i=1; i<=12; i++) {
-                    const savedDesc = draft.descriptions?.[i-1];
-                    if(savedDesc) document.getElementById(`desc-${i}`).value = savedDesc;
+                    if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
-                    if(savedImg) displayStoredPhoto(i, savedImg, draft.photo_meta?.[i-1]);
+                    if(savedImg) displayStoredPhoto(i, savedImg, `${draft.user} - ${draft.outlet}`);
                 }
                 validateSubmit();
             }
@@ -185,8 +185,7 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const now = new Date();
-                const meta = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}\n${now.toLocaleDateString('en-GB')} | ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+                const meta = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}`;
                 localStorage.setItem(`photo_data_${id}`, e.target.result);
                 displayStoredPhoto(id, e.target.result, meta);
                 saveDraft();
@@ -198,7 +197,7 @@
         function displayStoredPhoto(id, base64, meta) {
             const wrap = document.getElementById(`wrap-${id}`);
             document.getElementById(`placeholder-${id}`).classList.add('hidden');
-            wrap.innerHTML = `<button class="clear-btn" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button><img src="${base64}"><div class="timestamp-badge">${meta.replace(/\n/g, '<br>')}</div>`;
+            wrap.innerHTML = `<button class="clear-btn" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button><img src="${base64}"><div class="timestamp-badge">${meta}</div>`;
         }
 
         function clearPhoto(id) {
@@ -218,7 +217,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Please fill info.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Fill name and select role.");
             document.getElementById('step-1').style.display = 'none'; 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
@@ -258,67 +257,66 @@
                 const photos = [];
                 for(let id of activeIds) {
                     const clean = await compressImage(localStorage.getItem(`photo_data_${id}`));
-                    photos.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "No details provided" });
+                    photos.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "No details" });
                 }
 
-                const payload = { 
-                    user: document.getElementById('user-name').value, 
-                    role: currentRole, 
-                    outlet: document.getElementById('outlet-select').value, 
-                    date: document.getElementById('entry-date').value, 
-                    photos: photos 
-                };
+                const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
 
-                // CRITICAL: Cache images locally for supervisor horizontal slider view
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
                 history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
 
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.getElementById('success-overlay').style.display = 'flex';
-                }, 3000);
-
-            } catch (e) {
-                alert("Upload Interrupted");
-                overlay.style.display = 'none';
-            }
+                setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').style.display = 'flex'; }, 3000);
+            } catch (e) { alert("Error."); overlay.style.display = 'none'; }
         }
 
-        /** SUPERVISOR MODE V2.6 REVAMP **/
+        /** SUPERVISOR MODE V2.7 FIXES **/
         
         async function downloadIndividualPDF(role, rowId) {
-            // FIX: Use Blob Handwriting to force browser to DOWNLOAD instead of rendering Base64 text
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            overlay.style.display = 'flex';
+            loadingText.innerText = "Generating PDF...";
+            
             try {
+                // FIX: Handshake with GAS to get Base64 data then convert to Blob Download
                 const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
                 const resp = await fetch(url);
                 const result = await resp.json();
                 
                 if (result.data) {
-                    const byteChars = atob(result.data);
-                    const byteNums = new Array(byteChars.length);
-                    for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-                    const byteArray = new Uint8Array(byteNums);
-                    const blob = new Blob([byteArray], {type: 'application/pdf'});
-                    
+                    const blob = b64ToBlob(result.data, 'application/pdf');
                     const link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
-                    link.download = `Report_${role}_Row${rowId}.pdf`;
+                    link.download = `Report_${role}_#${rowId}.pdf`;
                     link.click();
                 } else { throw new Error(); }
             } catch (e) {
-                // Fallback to direct window open if blob fails
-                window.open(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`, '_blank');
+                alert("Cloud PDF unavailable. Opening browser view...");
+                window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank');
+            } finally {
+                overlay.style.display = 'none';
             }
+        }
+
+        function b64ToBlob(b64Data, contentType = '', sliceSize = 512) {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            return new Blob(byteArrays, {type: contentType});
         }
 
         function downloadBulk() {
             const checked = Array.from(document.querySelectorAll('.report-checkbox:checked'));
             if(checked.length === 0) return alert("Select reports first.");
-            const ids = checked.map(c => c.value).join(',');
-            window.open(`${WEB_APP_URL}?action=combinedPDF&ids=${ids}`, '_blank');
+            window.open(`${WEB_APP_URL}?action=combinedPDF&ids=${checked.map(c => c.value).join(',')}`, '_blank');
         }
 
         function renderAdminLogs() {
@@ -329,26 +327,25 @@
             const outletFilter = document.getElementById('filter-outlet').value;
             const dateFilter = document.getElementById('filter-date').value;
 
+            // FIX: Strict Filter Logic for Local Cache
             const filtered = history.filter(row => {
-                const matchesRole = roleFilter === "ALL" || row[4] === roleFilter; 
-                const matchesOutlet = outletFilter === "ALL" || row[2] === outletFilter;
-                const matchesDate = !dateFilter || row[0].toString().startsWith(dateFilter);
-                return matchesOutlet && matchesDate;
+                const matchRole = roleFilter === "ALL" || row[4] === roleFilter; 
+                const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
+                const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
+                return matchRole && matchOutlet && matchDate;
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black text-[10px]">NO RECORDS FOUND</div>`;
+                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black text-[10px]">NO RECORDS MATCH FILTERS</div>`;
                 return;
             }
 
             filtered.reverse().forEach((row, index) => {
-                const realIndex = filtered.length - index;
+                const realRowIndexInDatabase = filtered.length - index; // Note: This is an estimation for local history
                 const photos = row[5] || [];
-                
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-[2.5rem] border border-sky-100 shadow-sm relative";
                 
-                // NEW: Horizontal Image Slider Logic
                 let sliderHtml = photos.length > 0 ? `
                     <div class="admin-slider mt-4">
                         ${photos.map(p => `
@@ -358,23 +355,23 @@
                             </div>
                         `).join('')}
                     </div>
-                ` : `<div class="text-center text-[10px] font-bold text-slate-300 py-6">No images submitted</div>`;
+                ` : `<div class="text-center text-[10px] font-bold text-slate-300 py-6">No evidence photos</div>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="flex items-center gap-3">
-                            <input type="checkbox" value="${realIndex}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-sky-100">
+                            <input type="checkbox" value="${realRowIndexInDatabase}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-sky-100">
                             <div>
                                 <h4 class="font-black text-[12px] uppercase text-sky-900">${row[1]}</h4>
-                                <p class="text-[9px] font-bold text-sky-300 uppercase tracking-widest">${row[2]} | ${row[4]} MODE</p>
+                                <p class="text-[9px] font-bold text-sky-300 uppercase">${row[2]} | ${row[4]} PORTAL</p>
                             </div>
                         </div>
                         <span class="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-1 rounded-lg">SYNCED</span>
                     </div>
                     ${sliderHtml}
                     <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-50">
-                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realIndex}', '_blank')" class="py-3 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-external-link-alt mr-1"></i> Cloud View</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realIndex})" class="py-3 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-download mr-1"></i> PDF Report</button>
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIndexInDatabase}', '_blank')" class="py-3 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-external-link-alt mr-1"></i> Browser View</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIndexInDatabase})" class="py-3 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-file-pdf mr-1"></i> PDF Report</button>
                     </div>
                 `;
                 container.appendChild(card);
