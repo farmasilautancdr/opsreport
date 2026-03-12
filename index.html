@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.3.3</title>
+    <title>OPS PORTAL V3.3.4</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +33,7 @@
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -44,13 +44,13 @@
     <div id="image-modal" onclick="this.style.display='none'">
         <div class="flex flex-col items-center">
             <img id="modal-img" src="">
-            <p class="text-white mt-4 text-xs font-bold uppercase tracking-widest">Tap anywhere to close</p>
+            <p class="text-white mt-4 text-xs font-bold uppercase tracking-widest">Tap to close</p>
         </div>
     </div>
 
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center">Uploading...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest">Uploading Report...</h2>
     </div>
 
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
@@ -72,7 +72,7 @@
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <select id="filter-role" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl bg-white border border-slate-100 text-xs font-black shadow-sm outline-none">
-                        <option value="ALL">All Roles</option>
+                        <option value="ALL">All Portal Roles</option>
                         <option value="DRIVER">Driver</option>
                         <option value="OUTLET">Outlet</option>
                     </select>
@@ -89,10 +89,12 @@
         <div id="admin-log-container" class="p-6 space-y-10 pb-40"></div>
     </div>
 
-    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3.3</div>
-        <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
-        <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
+    <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0">
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3.4</div>
+        <div class="flex flex-col items-center text-center">
+            <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
+            <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
+        </div>
     </header>
 
     <main class="px-5 -mt-16 pb-20 relative z-10">
@@ -110,7 +112,7 @@
                     <select id="outlet-select" onchange="saveDraft()" class="w-full p-5 rounded-3xl border border-slate-100 bg-white outline-none font-bold text-slate-800 appearance-none"></select>
                     <input type="date" id="entry-date" oninput="saveDraft()" class="w-full p-5 rounded-3xl border border-slate-100 bg-white outline-none font-bold text-slate-800">
                 </div>
-                <button onclick="openPortal()" class="w-full ocean-gradient text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-sky-900/20 uppercase tracking-widest text-sm active:scale-95 transition-all uppercase">Login</button>
+                <button onclick="openPortal()" class="w-full ocean-gradient text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-sky-900/20 uppercase tracking-widest text-sm active:scale-95 transition-all">Login</button>
             </div>
         </section>
 
@@ -133,9 +135,9 @@
                                     <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-camera"></i></div>
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Capture Photo</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden">
-                                    <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
+                                    <div id="wrap-${i}" class="absolute inset-0 z-10 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="..."></textarea>
                             </div>
@@ -157,6 +159,7 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwy58cuAW4o6ZMuvH98TWoBwnSFfxppFG-eg6kbZvzM1I9fNYHlejK6WVFj79fZwY1r5w/exec';
         const outlets = ["AJ", "B6", "BB", "BJR", "BP", "CDR", "CK", "DG", "DGD", "GB", "GBD", "GM", "HL", "HQ", "HQCT", "JL", "JLD", "JTH", "KB", "KBKK", "KBKS", "KBTJ", "KKR", "KL", "KMD", "KMN", "KMSK", "KS", "MC", "MLR", "MR", "PC", "PK", "PM", "PP", "PPK", "PSPD", "PT", "RJ", "SLS", "SMR", "ST", "TM", "TMD", "TMT", "TPOH", "TPT", "WM"];
         let currentRole = "";
+        let globalDatabase = [];
 
         const sel = document.getElementById('outlet-select');
         const adminSel = document.getElementById('filter-outlet');
@@ -180,24 +183,6 @@
                 }
                 validateSubmit();
             }
-
-            // ATTACH PERSISTENT LISTENERS FOR MOBILE V3.3.3
-            for(let i=1; i<=12; i++) {
-                const el = document.getElementById(`cam-${i}`);
-                el.addEventListener('change', function(e) {
-                    if (this.files && this.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            const base64 = event.target.result;
-                            localStorage.setItem(`photo_data_${i}`, base64);
-                            displayStoredPhoto(i, base64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
-                            saveDraft();
-                            validateSubmit();
-                        };
-                        reader.readAsDataURL(this.files[0]);
-                    }
-                });
-            }
         };
 
         function selectRole(role) {
@@ -219,8 +204,25 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null; // Essential for Android/iOS re-captures
+            input.value = ""; // Clear state to re-trigger for mobile
             input.click(); 
+        }
+
+        // MOBILE OPTIMIZED INGESTION (Fix for Video Attachment Issue)
+        function handleImgUpload(input, id) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            // We use the same Logic as your other working app
+            reader.onload = function(e) {
+                const b64 = e.target.result;
+                localStorage.setItem(`photo_data_${id}`, b64);
+                displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
+                saveDraft();
+                validateSubmit();
+            };
+            reader.readAsDataURL(file);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -229,7 +231,7 @@
             if(placeholder) placeholder.classList.add('hidden');
             wrap.innerHTML = `
                 <button class="clear-btn pointer-events-auto" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button>
-                <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:20px;">
+                <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:20px; pointer-events: none;">
                 <div class="timestamp-badge">${meta}</div>
             `;
         }
@@ -260,6 +262,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
+        // STAMPING ENGINE: Description + Metadata
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -273,13 +276,15 @@
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = "rgba(0,0,0,0.7)";
                     ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
-                    ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = "#ffffff"; 
+                    ctx.font = "bold 24px Arial";
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole + " PORTAL";
                     const desc = document.getElementById(`desc-${idx}`).value || "Evidence";
                     const dateStr = new Date().toLocaleString();
-                    ctx.fillText(`${outlet} - ${name} - ${portal} - ${desc} - ${dateStr}`, 30, canvas.height - 35);
+                    const watermarkText = `${outlet} - ${name} - ${portal} - ${desc} - ${dateStr}`;
+                    ctx.fillText(watermarkText, 30, canvas.height - 35);
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
             });
@@ -300,46 +305,97 @@
 
                 const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
                 
-                // CACHE LOCALLY FOR INSTANT DASHBOARD VIEW
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                // Save locally to show on own device history immediately
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
                 history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
 
-                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
-            } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
+            } catch (e) { alert("Error Syncing."); overlay.style.display = 'none'; }
         }
 
-        /* SUPERVISOR DASHBOARD V3.3.3 - CLOUD SYNCED */
+        /* SUPERVISOR - LIVE CLOUD FETCH (Logic from your other app) */
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing with Cloud...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching All Devices Data...</div>`;
             try {
-                // We ask the backend for ALL data across devices
-                const resp = await fetch(WEB_APP_URL + "?action=combinedPDF&file=check"); // Placeholder to check connection
-                // Note: For full cloud sync, GAS doPost should return success and Dojo should read from Sheet.
-                // For this version, we will stick to Local + Stamping persistence.
+                const r = await fetch(WEB_APP_URL + "?action=fetchData");
+                const d = await r.json();
+                globalDatabase = d.history || [];
                 renderAdminLogs();
-            } catch(e) { renderAdminLogs(); }
+            } catch (e) { 
+                console.error("Cloud Error", e);
+                renderAdminLogs(); // Fallback to local if cloud fails
+            }
+        }
+
+        function renderAdminLogs() {
+            const container = document.getElementById('admin-log-container');
+            container.innerHTML = "";
+            const roleFilter = document.getElementById('filter-role').value;
+            const outletFilter = document.getElementById('filter-outlet').value;
+            const dateFilter = document.getElementById('filter-date').value;
+
+            // COMBINE LOCAL AND CLOUD (Uniquify by timestamp)
+            const localHistory = JSON.parse(localStorage.getItem('ops_history')) || [];
+            const merged = [...globalDatabase];
+            
+            // Filter logic
+            const filtered = merged.filter(row => {
+                const matchRole = roleFilter === "ALL" || row[4].toUpperCase() === roleFilter.toUpperCase(); 
+                const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
+                const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
+                return matchRole && matchOutlet && matchDate;
+            });
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cross-Device Records Found</div>`;
+                return;
+            }
+
+            filtered.reverse().forEach((row, index) => {
+                const photos = row[5] || [];
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
+                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px]">No Content</div>`;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-4">
+                            <input type="checkbox" value="${index+1}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-slate-300 accent-sky-900">
+                            <div>
+                                <h4 class="font-black text-[13px] uppercase text-slate-800 leading-tight">${row[1]}</h4>
+                                <p class="text-[9px] font-black text-sky-500 mt-1 uppercase">${row[2]} • ${row[4]}</p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase">Synced</span>
+                    </div>
+                    ${sliderHtml}
+                    <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${filtered.length - index}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase">View</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${filtered.length - index})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase">PDF</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
             try {
-                const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
-                const resp = await fetch(url);
+                const resp = await fetch(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`);
                 const result = await resp.json();
-                if (result.data) {
-                    const byteChars = atob(result.data);
-                    const byteNums = new Array(byteChars.length);
-                    for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-                    const blob = new Blob([new Uint8Array(byteNums)], {type: 'application/pdf'});
-                    const link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = `Report_${role}_${rowId}.pdf`;
-                    link.click();
-                } else { throw new Error(); }
+                const byteChars = atob(result.data);
+                const byteNums = new Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+                const blob = new Blob([new Uint8Array(byteNums)], {type: 'application/pdf'});
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `Report_${role}_${rowId}.pdf`;
+                link.click();
             } catch (e) { window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); } 
             finally { overlay.style.display = 'none'; }
         }
@@ -357,58 +413,17 @@
             modal.style.display = 'flex';
         }
 
-        function renderAdminLogs() {
-            const history = JSON.parse(localStorage.getItem('ops_history')) || [];
-            const container = document.getElementById('admin-log-container');
-            container.innerHTML = "";
-            const roleFilter = document.getElementById('filter-role').value;
-            const outletFilter = document.getElementById('filter-outlet').value;
-            const dateFilter = document.getElementById('filter-date').value;
-
-            const filtered = history.filter(row => {
-                const matchRole = roleFilter === "ALL" || row[4].toUpperCase() === roleFilter.toUpperCase(); 
-                const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
-                const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
-                return matchRole && matchOutlet && matchDate;
-            });
-
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Synced</div>`;
-                return;
-            }
-
-            filtered.reverse().forEach((row, index) => {
-                const realRowIdx = filtered.length - index;
-                const photos = row[5] || [];
-                const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px]">No Content</div>`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-center gap-4">
-                            <input type="checkbox" value="${realRowIdx}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-slate-300 accent-sky-900">
-                            <div>
-                                <h4 class="font-black text-[13px] uppercase text-slate-800 leading-tight">${row[1]}</h4>
-                                <p class="text-[9px] font-black text-sky-500 mt-1 uppercase">${row[2]} • ${row[4]}</p>
-                            </div>
-                        </div>
-                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase">Synced</span>
-                    </div>
-                    ${sliderHtml}
-                    <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
-                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIdx}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase">Browser</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase">PDF</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
         function promptAdmin() {
-            if(prompt("Enter PIN:") === "admin") { document.getElementById('admin-overlay').style.display = 'flex'; fetchCloudData(); } 
-            else alert("Denied.");
+            if(prompt("Enter Access PIN:") === "admin") { 
+                document.getElementById('admin-overlay').style.display = 'flex'; 
+                fetchCloudData(); 
+            } else alert("Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+        }
     </script>
 </body>
 </html>
