@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.3.4</title>
+    <title>OPS PORTAL V3.3.5</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +33,7 @@
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -50,7 +50,7 @@
 
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest">Uploading Report...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center">Processing...</h2>
     </div>
 
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
@@ -64,7 +64,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-800 text-sky-900 tracking-tighter uppercase">Supervisor</h2>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Real-time Dashboard</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cross-Device Feed</p>
                 </div>
                 <button onclick="closeAdmin()" class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-lg active:scale-90 shadow-sm"><i class="fas fa-times"></i></button>
             </div>
@@ -90,7 +90,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3.4</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3.5</div>
         <div class="flex flex-col items-center text-center">
             <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
             <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
@@ -101,7 +101,7 @@
         <section id="step-1" class="glass-card rounded-[40px] p-8 shadow-2xl border-none">
             <div class="space-y-8">
                 <div>
-                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Category Selection</label>
+                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identity Category</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Driver</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Outlet</button>
@@ -137,7 +137,7 @@
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
                                     <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
-                                    <div id="wrap-${i}" class="absolute inset-0 z-10 pointer-events-none"></div>
+                                    <div id="wrap-${i}" class="absolute inset-0 pointer-events-none z-10"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="..."></textarea>
                             </div>
@@ -204,23 +204,26 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = ""; // Clear state to re-trigger for mobile
+            input.value = null; // Essential reset for mobile re-captures
             input.click(); 
         }
 
-        // MOBILE OPTIMIZED INGESTION (Fix for Video Attachment Issue)
+        // MOBILE UPLOAD LOGIC FROM YOUR WORKING APP (V3.3.5)
         function handleImgUpload(input, id) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
             const reader = new FileReader();
             
-            // We use the same Logic as your other working app
+            document.getElementById('loading-overlay').style.display = "flex";
+            document.getElementById('loading-text').innerText = "Attaching Photo...";
+
             reader.onload = function(e) {
                 const b64 = e.target.result;
                 localStorage.setItem(`photo_data_${id}`, b64);
                 displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
                 saveDraft();
                 validateSubmit();
+                document.getElementById('loading-overlay').style.display = "none";
             };
             reader.readAsDataURL(file);
         }
@@ -253,7 +256,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Identify Info first.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Identify Name/Role first.");
             document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
@@ -262,7 +265,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // STAMPING ENGINE: Description + Metadata
+        // STAMPING ENGINE (Burning Description into Image)
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -293,6 +296,7 @@
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Stamping & Syncing...";
             const activeIds = [];
             for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
@@ -307,19 +311,19 @@
                 
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
                 
-                // Save locally to show on own device history immediately
+                // Cache locally for immediate view on same device
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
                 history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
 
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
-            } catch (e) { alert("Error Syncing."); overlay.style.display = 'none'; }
+            } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
         }
 
-        /* SUPERVISOR - LIVE CLOUD FETCH (Logic from your other app) */
+        /* SUPERVISOR - LIVE CLOUD DATA ENGINE (Fixes Cross-Device visibility) */
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching All Devices Data...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing with Cloud...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
@@ -327,7 +331,7 @@
                 renderAdminLogs();
             } catch (e) { 
                 console.error("Cloud Error", e);
-                renderAdminLogs(); // Fallback to local if cloud fails
+                renderAdminLogs(); // Fallback to local device cache
             }
         }
 
@@ -338,12 +342,7 @@
             const outletFilter = document.getElementById('filter-outlet').value;
             const dateFilter = document.getElementById('filter-date').value;
 
-            // COMBINE LOCAL AND CLOUD (Uniquify by timestamp)
-            const localHistory = JSON.parse(localStorage.getItem('ops_history')) || [];
-            const merged = [...globalDatabase];
-            
-            // Filter logic
-            const filtered = merged.filter(row => {
+            const filtered = globalDatabase.filter(row => {
                 const matchRole = roleFilter === "ALL" || row[4].toUpperCase() === roleFilter.toUpperCase(); 
                 const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
                 const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
@@ -351,7 +350,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cross-Device Records Found</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Synced</div>`;
                 return;
             }
 
@@ -374,7 +373,7 @@
                     </div>
                     ${sliderHtml}
                     <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
-                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${filtered.length - index}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase">View</button>
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${filtered.length - index}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase">Browser</button>
                         <button onclick="downloadIndividualPDF('${row[4]}', ${filtered.length - index})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase">PDF</button>
                     </div>
                 `;
