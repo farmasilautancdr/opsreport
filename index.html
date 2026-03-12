@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.2.3</title>
+    <title>OPS PORTAL V3.3</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -63,7 +63,7 @@
         <div class="sticky-header">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl font-800 text-sky-900 tracking-tighter uppercase">Supervisor Portal</h2>
+                    <h2 class="text-2xl font-800 text-sky-900 tracking-tighter uppercase">Supervisor</h2>
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Real-time Dashboard</p>
                 </div>
                 <button onclick="closeAdmin()" class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-lg active:scale-90 shadow-sm"><i class="fas fa-times"></i></button>
@@ -90,7 +90,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.2.3</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.3</div>
         <div class="flex flex-col items-center text-center">
             <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
             <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
@@ -101,7 +101,7 @@
         <section id="step-1" class="glass-card rounded-[40px] p-8 shadow-2xl border-none">
             <div class="space-y-8">
                 <div>
-                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identify Category</label>
+                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Category Selection</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Driver</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Outlet</button>
@@ -135,7 +135,7 @@
                                     <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-camera"></i></div>
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Capture</div></div>
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="previewLocalPhoto(${i})">
                                     <div id="wrap-${i}"></div>
                                 </div>
@@ -203,7 +203,7 @@
 
         function triggerCamera(id) { document.getElementById(`cam-${id}`).click(); }
 
-        // FIX: Restoration of Capture Preview logic
+        // STEP 1: Persistent Local Capture - RE-LINKED Logic
         function previewLocalPhoto(id) {
             const file = document.getElementById(`cam-${id}`).files[0];
             if(!file) return;
@@ -218,6 +218,7 @@
             reader.readAsDataURL(file);
         }
 
+        // WATERMARK STAMPING ENGINE V3.3
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -316,9 +317,11 @@
             } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
         }
 
+        /* SUPERVISOR DASHBOARD V3.3 */
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Generating PDF...";
             try {
                 const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
                 const resp = await fetch(url);
@@ -366,7 +369,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Matches</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Matches Found</div>`;
                 return;
             }
 
@@ -415,6 +418,13 @@
             } else alert("Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
+        
+        // PWA Setup
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
     </script>
 </body>
 </html>
