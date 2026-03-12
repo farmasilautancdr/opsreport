@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V2.7</title>
+    <title>OPS PORTAL V2.8</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -18,64 +18,68 @@
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); color: white; font-size: 9px; padding: 20px 12px 8px 12px; z-index: 20; line-height: 1.3; pointer-events: none; }
         .clear-btn { position: absolute; top: 10px; right: 10px; z-index: 30; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
+        #success-overlay, #admin-overlay, #loading-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; }
         #loading-overlay { background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); color: white; }
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* SUPERVISOR IMAGE SLIDER */
+        /* SUPERVISOR UI FIXES */
         .admin-slider { display: flex; overflow-x: auto; gap: 12px; padding: 10px 0; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .admin-slider::-webkit-scrollbar { height: 4px; }
         .admin-slider::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
-        .slider-item { flex: 0 0 80%; scroll-snap-align: center; background: #f8fafc; border-radius: 15px; border: 1px solid #e0f2fe; overflow: hidden; }
-        .slider-item img { width: 100%; height: 160px; object-fit: cover; background: #eee; }
-        .slider-desc { padding: 10px; font-size: 10px; color: #0369a1; font-weight: 700; line-height: 1.4; min-height: 40px; background: white; }
+        .slider-item { flex: 0 0 82%; scroll-snap-align: center; background: #f8fafc; border-radius: 15px; border: 1px solid #e0f2fe; overflow: hidden; }
+        .slider-item img { width: 100%; height: 170px; object-fit: cover; background: #f1f5f9; }
+        .slider-desc { padding: 12px; font-size: 10px; color: #0369a1; font-weight: 700; line-height: 1.4; min-height: 45px; background: white; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
         <div id="loading-spinner" class="spinner"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing...</h2>
-        <p id="loading-subtext" class="text-xs mt-2 opacity-70">Securing data. Please do not close.</p>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing Data...</h2>
+        <p id="loading-subtext" class="text-xs mt-2 opacity-70">Securing files and generating documents...</p>
     </div>
 
     <div id="success-overlay">
-        <div class="text-emerald-500 text-6xl mb-4"><i class="fas fa-check-circle"></i></div>
-        <h2 class="text-2xl font-800 text-sky-900 uppercase tracking-widest">Success</h2>
-        <button onclick="clearAllAndReload()" class="mt-8 px-10 py-3 bg-cyan-600 text-white rounded-full font-bold shadow-lg">New Entry</button>
+        <div class="text-emerald-500 text-7xl mb-4"><i class="fas fa-check-circle"></i></div>
+        <h2 class="text-2xl font-800 text-sky-900 uppercase tracking-widest">Entry Saved</h2>
+        <button onclick="clearAllAndReload()" class="mt-8 px-12 py-4 bg-cyan-600 text-white rounded-full font-bold shadow-lg">New Entry</button>
     </div>
 
-    <div id="admin-overlay" class="p-6">
-        <div class="w-full max-w-lg mx-auto">
+    <div id="admin-overlay">
+        <div class="sticky top-0 z-[2100] bg-white border-b border-sky-100 p-6 shadow-sm">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Dashboard</h2>
+                <h2 class="text-xl font-800 text-sky-900 uppercase tracking-tighter">Supervisor Feed</h2>
                 <button onclick="closeAdmin()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-bold uppercase">Exit</button>
             </div>
             
-            <div class="bg-white p-5 rounded-[2rem] border border-sky-100 shadow-sm mb-6 space-y-3">
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="filter-role" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50">
-                        <option value="ALL">All Portals</option>
-                        <option value="DRIVER">Driver</option>
-                        <option value="OUTLET">Outlet</option>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="filter-role" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl border border-sky-50 text-xs font-black bg-slate-50 text-sky-900">
+                        <option value="ALL">All Portal Roles</option>
+                        <option value="DRIVER">Driver Only</option>
+                        <option value="OUTLET">Outlet Only</option>
                     </select>
-                    <select id="filter-outlet" onchange="renderAdminLogs()" class="p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50"></select>
+                    <select id="filter-outlet" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl border border-sky-50 text-xs font-black bg-slate-50 text-sky-900"></select>
                 </div>
-                <input type="month" id="filter-date" onchange="renderAdminLogs()" class="w-full p-3 rounded-xl border border-sky-50 text-xs font-bold bg-slate-50">
-                <button onclick="downloadBulk()" class="w-full bg-blue-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-md active:scale-95 transition-all">
-                    <i class="fas fa-file-pdf mr-2"></i> Download Combined PDF
-                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="month" id="filter-date" onchange="renderAdminLogs()" class="p-4 rounded-2xl border border-sky-50 text-xs font-black bg-slate-50 text-sky-900">
+                    <button onclick="downloadBulk()" class="bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-md">
+                        <i class="fas fa-file-pdf mr-1"></i> Bulk PDF
+                    </button>
+                </div>
             </div>
+        </div>
 
+        <div class="p-6">
             <div id="admin-log-container" class="space-y-6 pb-20"></div>
         </div>
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[45px] shadow-2xl relative z-0">
-        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.7</div>
+        <div class="absolute top-6 right-8 text-[10px] font-bold text-sky-300 opacity-60">V2.8</div>
         <div class="flex flex-col items-center text-center">
-            <h1 class="text-3xl font-900 tracking-tighter">OPS PORTAL</h1>
+            <h1 class="text-3xl font-900 tracking-tighter uppercase">Ops Portal</h1>
             <p class="text-sky-200 text-[10px] font-bold tracking-[0.2em] opacity-80 uppercase mt-1">Operational Reporting System</p>
         </div>
     </header>
@@ -100,12 +104,13 @@
         </section>
 
         <section id="step-2" class="hidden space-y-6">
-            <div class="flex items-center gap-3">
-                <button onclick="goBack()" class="bg-white px-5 py-3 rounded-2xl shadow-md text-sky-800 font-bold text-[11px] flex items-center border border-sky-100 active:scale-90 transition-all uppercase whitespace-nowrap">
-                    <span class="mr-2 text-base">⇠</span> BACK
+            <div class="flex items-center gap-3 bg-white/50 p-2 rounded-2xl backdrop-blur-sm">
+                <button onclick="goBack()" class="bg-white px-5 py-3 rounded-xl shadow-md text-sky-800 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 transition-all uppercase">
+                    <i class="fas fa-chevron-left mr-2"></i> Back
                 </button>
-                <div class="flex-1 bg-sky-800/10 h-[2px] rounded-full"></div>
-                <span id="portal-display-title" class="text-sky-900 font-800 italic text-xs uppercase tracking-tighter"></span>
+                <div class="flex-1 text-right">
+                    <span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest"></span>
+                </div>
             </div>
             <div id="photo-grid" class="space-y-6">
                 <script>
@@ -121,7 +126,7 @@
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="previewPhoto(${i})">
                                     <div id="wrap-${i}"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-medium text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Details..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-4 rounded-xl border border-sky-50 bg-slate-50 text-sm font-medium text-sky-800 outline-none focus:ring-2 focus:ring-cyan-400" placeholder="Type specific details for this photo..."></textarea>
                             </div>
                         `);
                     }
@@ -131,8 +136,8 @@
         </section>
     </main>
 
-    <div class="fixed bottom-4 right-4 z-[50]">
-        <button onclick="promptAdmin()" class="bg-white/50 backdrop-blur p-3 rounded-full text-[9px] font-black text-sky-900 shadow-lg uppercase border border-sky-100"><i class="fas fa-user-shield mr-1"></i> Admin</button>
+    <div class="fixed bottom-4 right-4 z-[100]">
+        <button onclick="promptAdmin()" class="bg-white/90 backdrop-blur-md p-4 rounded-full text-[10px] font-black text-sky-900 shadow-xl uppercase border border-sky-100 active:scale-95 transition-all"><i class="fas fa-user-shield mr-2 text-sky-500"></i> Admin Feed</button>
     </div>
 
     <script>
@@ -143,7 +148,7 @@
         const sel = document.getElementById('outlet-select');
         const adminSel = document.getElementById('filter-outlet');
         sel.innerHTML = outlets.map(o => `<option value="${o}">${o}</option>`).join('');
-        adminSel.innerHTML = `<option value="ALL">All Outlets</option>` + outlets.map(o => `<option value="${o}">${o}</option>`).join('');
+        adminSel.innerHTML = `<option value="ALL">All Outlet Codes</option>` + outlets.map(o => `<option value="${o}">${o}</option>`).join('');
         
         document.getElementById('entry-date').valueAsDate = new Date();
         document.getElementById('filter-date').value = new Date().toISOString().slice(0, 7);
@@ -185,9 +190,8 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const meta = `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}`;
                 localStorage.setItem(`photo_data_${id}`, e.target.result);
-                displayStoredPhoto(id, e.target.result, meta);
+                displayStoredPhoto(id, e.target.result, `${document.getElementById('user-name').value} - ${document.getElementById('outlet-select').value}`);
                 saveDraft();
                 validateSubmit();
             }
@@ -217,10 +221,10 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Fill name and select role.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Please fill name and select a role.");
             document.getElementById('step-1').style.display = 'none'; 
             document.getElementById('step-2').classList.remove('hidden'); 
-            document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
+            document.getElementById('portal-display-title').innerText = currentRole + " PORTAL MODE"; 
         }
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').style.display = 'block'; }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
@@ -257,66 +261,75 @@
                 const photos = [];
                 for(let id of activeIds) {
                     const clean = await compressImage(localStorage.getItem(`photo_data_${id}`));
-                    photos.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "No details" });
+                    photos.push({ base64: clean, description: document.getElementById(`desc-${id}`).value || "No details provided" });
                 }
 
-                const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
+                const payload = { 
+                    user: document.getElementById('user-name').value, 
+                    role: currentRole, 
+                    outlet: document.getElementById('outlet-select').value, 
+                    date: document.getElementById('entry-date').value, 
+                    photos: photos 
+                };
 
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
                 history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
 
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').style.display = 'flex'; }, 3000);
-            } catch (e) { alert("Error."); overlay.style.display = 'none'; }
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.getElementById('success-overlay').style.display = 'flex';
+                }, 3000);
+
+            } catch (e) {
+                alert("Connection Interrupted");
+                overlay.style.display = 'none';
+            }
         }
 
-        /** SUPERVISOR MODE V2.7 FIXES **/
-        
+        /** SUPERVISOR MODE V2.8 REVAMP **/
+
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             const loadingText = document.getElementById('loading-text');
             overlay.style.display = 'flex';
-            loadingText.innerText = "Generating PDF...";
+            loadingText.innerText = "Syncing PDF Data...";
             
             try {
-                // FIX: Handshake with GAS to get Base64 data then convert to Blob Download
+                // FIXED BLOB DOWNLOAD: Prevents jumbled words by forcing file stream
                 const url = `${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`;
                 const resp = await fetch(url);
                 const result = await resp.json();
                 
                 if (result.data) {
-                    const blob = b64ToBlob(result.data, 'application/pdf');
+                    const byteCharacters = atob(result.data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], {type: 'application/pdf'});
+                    
                     const link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     link.download = `Report_${role}_#${rowId}.pdf`;
+                    document.body.appendChild(link);
                     link.click();
+                    document.body.removeChild(link);
                 } else { throw new Error(); }
             } catch (e) {
-                alert("Cloud PDF unavailable. Opening browser view...");
+                alert("Direct download failed. Opening Browser View instead.");
                 window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank');
             } finally {
                 overlay.style.display = 'none';
             }
         }
 
-        function b64ToBlob(b64Data, contentType = '', sliceSize = 512) {
-            const byteCharacters = atob(b64Data);
-            const byteArrays = [];
-            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-                const slice = byteCharacters.slice(offset, offset + sliceSize);
-                const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
-            }
-            return new Blob(byteArrays, {type: contentType});
-        }
-
         function downloadBulk() {
             const checked = Array.from(document.querySelectorAll('.report-checkbox:checked'));
             if(checked.length === 0) return alert("Select reports first.");
-            window.open(`${WEB_APP_URL}?action=combinedPDF&ids=${checked.map(c => c.value).join(',')}`, '_blank');
+            const ids = checked.map(c => c.value).join(',');
+            window.open(`${WEB_APP_URL}?action=combinedPDF&ids=${ids}`, '_blank');
         }
 
         function renderAdminLogs() {
@@ -327,7 +340,7 @@
             const outletFilter = document.getElementById('filter-outlet').value;
             const dateFilter = document.getElementById('filter-date').value;
 
-            // FIX: Strict Filter Logic for Local Cache
+            // STRICT FILTERING LOGIC (ALL FILTERS MUST MATCH)
             const filtered = history.filter(row => {
                 const matchRole = roleFilter === "ALL" || row[4] === roleFilter; 
                 const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
@@ -336,13 +349,14 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-30 font-black text-[10px]">NO RECORDS MATCH FILTERS</div>`;
+                container.innerHTML = `<div class="text-center py-20 opacity-30 font-black text-[11px] uppercase tracking-[0.2em]">No Matches Found</div>`;
                 return;
             }
 
             filtered.reverse().forEach((row, index) => {
-                const realRowIndexInDatabase = filtered.length - index; // Note: This is an estimation for local history
+                const realRowIndex = filtered.length - index;
                 const photos = row[5] || [];
+                
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-[2.5rem] border border-sky-100 shadow-sm relative";
                 
@@ -355,23 +369,23 @@
                             </div>
                         `).join('')}
                     </div>
-                ` : `<div class="text-center text-[10px] font-bold text-slate-300 py-6">No evidence photos</div>`;
+                ` : `<div class="text-center text-[10px] font-bold text-slate-300 py-6 italic">No evidence attached</div>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="flex items-center gap-3">
-                            <input type="checkbox" value="${realRowIndexInDatabase}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-sky-100">
+                            <input type="checkbox" value="${realRowIndex}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-sky-100 accent-blue-600">
                             <div>
-                                <h4 class="font-black text-[12px] uppercase text-sky-900">${row[1]}</h4>
-                                <p class="text-[9px] font-bold text-sky-300 uppercase">${row[2]} | ${row[4]} PORTAL</p>
+                                <h4 class="font-black text-[12px] uppercase text-sky-900 leading-none">${row[1]}</h4>
+                                <p class="text-[9px] font-bold text-sky-400 uppercase tracking-widest mt-1">${row[2]} • ${row[4]} PORTAL</p>
                             </div>
                         </div>
                         <span class="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-1 rounded-lg">SYNCED</span>
                     </div>
                     ${sliderHtml}
                     <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-50">
-                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIndexInDatabase}', '_blank')" class="py-3 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-external-link-alt mr-1"></i> Browser View</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIndexInDatabase})" class="py-3 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-file-pdf mr-1"></i> PDF Report</button>
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIndex}', '_blank')" class="py-3 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-external-link-alt mr-1"></i> Browser View</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIndex})" class="py-3 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase"><i class="fas fa-file-pdf mr-1"></i> PDF Export</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -379,9 +393,9 @@
         }
 
         function promptAdmin() {
-            if(prompt("Enter Supervisor PIN:") === "admin") { 
+            if(prompt("Supervisor Access PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; renderAdminLogs(); 
-            } else alert("Unauthorized.");
+            } else alert("Access Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
     </script>
