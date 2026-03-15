@@ -19,6 +19,7 @@
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); z-index: 100; padding: 20px; border-bottom: 1px solid #e2e8f0; }
         
         .admin-slider { display: flex; overflow-x: auto; gap: 14px; padding: 10px 0; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .admin-slider::-webkit-scrollbar { display: none; }
         .slider-item { flex: 0 0 85%; scroll-snap-align: center; background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); cursor: pointer; }
         .slider-item img { width: 100%; height: 210px; object-fit: cover; }
         .slider-desc { padding: 12px 16px; font-size: 11px; color: #1e293b; font-weight: 700; background: #fff; border-top: 1px solid #f1f5f9; min-height: 50px; }
@@ -129,11 +130,11 @@
                             <div class="photo-card space-y-4">
                                 <div class="flex justify-between items-center px-1">
                                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Evidence Slot ${i}</span>
-                                    <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-camera"></i></div>
+                                    <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-image"></i></div>
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">🖼️</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Select From Gallery</div></div>
+                                    <input type="file" id="cam-${i}" accept="image/*" class="hidden" onchange="handleImgUpload(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type photo description here..."></textarea>
@@ -201,32 +202,17 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null; // Essential reset
+            input.value = null;
             input.click(); 
         }
 
-        // V2.1 Strategy: Instant Buffer Stream
         function handleImgUpload(input, id) {
             if (!input.files || !input.files[0]) return;
             const reader = new FileReader();
-            
-            // Immediate UI Injection before any processing
             reader.onload = function(e) {
                 const b64 = e.target.result;
                 localStorage.setItem(`photo_data_${id}`, b64);
-                
-                // Force Update UI
-                const wrap = document.getElementById(`wrap-${id}`);
-                const placeholder = document.getElementById(`placeholder-${id}`);
-                if(placeholder) placeholder.classList.add('hidden');
-                
-                // Binary Injection
-                wrap.innerHTML = `
-                    <button class="clear-btn pointer-events-auto" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button>
-                    <img src="${b64}" style="width:100%; height:100%; object-fit:cover; border-radius:20px; pointer-events: none;">
-                    <div class="timestamp-badge">${document.getElementById('user-name').value} | ${new Date().toLocaleTimeString()}</div>
-                `;
-                
+                displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
                 saveDraft();
                 validateSubmit();
             };
@@ -270,7 +256,6 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // STAMPING ENGINE: Delayed until Submit
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -288,7 +273,7 @@
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole + " PORTAL";
-                    const desc = document.getElementById(`desc-${idx}`).value || "Evidence Verified";
+                    const desc = document.getElementById(`desc-${idx}`).value || "No Details";
                     const dateStr = new Date().toLocaleString();
                     const watermarkText = `${outlet} - ${name} - ${portal} - ${desc} - ${dateStr}`;
                     ctx.fillText(watermarkText, 30, canvas.height - 35);
@@ -318,7 +303,7 @@
 
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing Master Records...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching Universal Database...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
@@ -342,7 +327,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Synced</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Found</div>`;
                 return;
             }
 
@@ -406,7 +391,7 @@
         }
 
         function promptAdmin() {
-            if(prompt("Security PIN:") === "admin") { 
+            if(prompt("Enter Access PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; 
                 fetchCloudData(); 
             } else alert("Denied.");
