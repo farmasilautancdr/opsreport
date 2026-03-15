@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.5.2</title>
+    <title>OPS PORTAL V3.6</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,50 +14,37 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
         .ocean-gradient { background: linear-gradient(135deg, #075985 0%, #0c4a6e 100%); }
         .glass-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border: 1px solid #bae6fd; }
-        
         #admin-overlay { display: none; position: fixed; inset: 0; background: #f8fafc; z-index: 9999; flex-direction: column; overflow-y: auto; }
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); z-index: 100; padding: 20px; border-bottom: 1px solid #e2e8f0; }
-        
         .admin-slider { display: flex; overflow-x: auto; gap: 14px; padding: 10px 0; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .admin-slider::-webkit-scrollbar { display: none; }
         .slider-item { flex: 0 0 85%; scroll-snap-align: center; background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); cursor: pointer; }
         .slider-item img { width: 100%; height: 210px; object-fit: cover; }
         .slider-desc { padding: 12px 16px; font-size: 11px; color: #1e293b; font-weight: 700; background: #fff; border-top: 1px solid #f1f5f9; min-height: 50px; }
-
         #image-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; align-items: center; justify-content: center; padding: 20px; }
         #image-modal img { max-width: 100%; max-height: 80vh; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-
         .photo-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 28px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .photo-upload-zone { width: 100%; height: 230px; border: 2px dashed #cbd5e1; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #f1f5f9; cursor: pointer; }
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; border-radius: 20px; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
     <canvas id="compressCanvas" class="hidden"></canvas>
-
     <div id="image-modal" onclick="this.style.display='none'">
-        <div class="flex flex-col items-center">
-            <img id="modal-img" src="">
-            <p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center">Tap to close</p>
-        </div>
+        <div class="flex flex-col items-center"><img id="modal-img" src=""><p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center px-4">Tap to close</p></div>
     </div>
-
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing & Syncing...</h2>
     </div>
-
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
         <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner"><i class="fas fa-check"></i></div>
         <h2 class="text-2xl font-800 uppercase tracking-widest text-slate-800">Synced to Cloud</h2>
-        <button onclick="clearAllAndReload()" class="mt-10 px-12 py-4 bg-sky-900 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95">New Report</button>
+        <button onclick="clearAllAndReload()" class="mt-10 px-12 py-4 bg-sky-900 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95">New Entry</button>
     </div>
 
     <div id="admin-overlay">
@@ -65,11 +52,10 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-800 text-sky-900 tracking-tighter uppercase">Supervisor</h2>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Universal Database Feed</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cross-Device History Feed</p>
                 </div>
                 <button onclick="closeAdmin()" class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-lg active:scale-90 shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <select id="filter-role" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl bg-white border border-slate-100 text-xs font-black shadow-sm outline-none">
@@ -81,9 +67,7 @@
                 </div>
                 <div class="grid grid-cols-5 gap-3">
                     <input type="month" id="filter-date" onchange="renderAdminLogs()" class="col-span-3 p-4 rounded-2xl bg-white border border-slate-100 text-xs font-black shadow-sm">
-                    <button onclick="downloadBulk()" class="col-span-2 bg-sky-900 text-white rounded-2xl flex items-center justify-center text-[10px] font-black uppercase tracking-widest shadow-lg">
-                        <i class="fas fa-file-pdf mr-2"></i> Bulk PDF
-                    </button>
+                    <button onclick="downloadBulk()" class="col-span-2 bg-sky-900 text-white rounded-2xl flex items-center justify-center text-[10px] font-black uppercase tracking-widest shadow-lg"><i class="fas fa-file-pdf mr-2"></i> Bulk PDF</button>
                 </div>
             </div>
         </div>
@@ -91,7 +75,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.5.2</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase tracking-tighter">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -100,7 +84,7 @@
         <section id="step-1" class="glass-card rounded-[40px] p-8 shadow-2xl border-none">
             <div class="space-y-8">
                 <div>
-                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identity Category</label>
+                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identify Identity</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Driver</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Outlet</button>
@@ -117,12 +101,8 @@
 
         <section id="step-2" class="hidden space-y-6 mt-4">
             <div class="flex items-center gap-3 bg-white/50 p-2 rounded-2xl backdrop-blur-sm shadow-inner">
-                <button onclick="goBack()" class="bg-white px-6 py-3 rounded-xl shadow-md text-sky-900 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 uppercase">
-                    <i class="fas fa-chevron-left mr-2"></i> BACK
-                </button>
-                <div class="flex-1 text-right mr-4">
-                    <span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest"></span>
-                </div>
+                <button onclick="goBack()" class="bg-white px-6 py-3 rounded-xl shadow-md text-sky-900 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 uppercase"><i class="fas fa-chevron-left mr-2"></i> BACK</button>
+                <div class="flex-1 text-right mr-4"><span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest"></span></div>
             </div>
             <div id="photo-grid" class="space-y-6">
                 <script>
@@ -138,7 +118,7 @@
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none z-10"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type specific details here..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type photo description here..."></textarea>
                             </div>
                         `);
                     }
@@ -203,16 +183,16 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null; // Forced reset for re-triggers
+            input.value = null; // Essential reset
             input.click(); 
         }
 
-        // V2.1 Logic: Zero-lag instant attachment
+        // IMPROVISED: Zero-lag instant capture mapping (V2.1 speed logic)
         function handleImgUpload(input, id) {
             if (!input.files || !input.files[0]) return;
-            const file = input.files[0];
             const reader = new FileReader();
             
+            // Optional feedback
             document.getElementById('loading-overlay').style.display = "flex";
             document.getElementById('loading-text').innerText = "Attaching Image...";
 
@@ -224,7 +204,7 @@
                 validateSubmit();
                 document.getElementById('loading-overlay').style.display = "none";
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -255,7 +235,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Identify Name & Role first.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Verify Identity.");
             document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
@@ -264,7 +244,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // STAMPING ENGINE: Run only during final submission
+        // STAMPING 2.0: outlet - name - portal - photo description - time & date
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -283,7 +263,7 @@
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole + " PORTAL";
-                    const desc = document.getElementById(`desc-${idx}`).value || "Evidence Verified";
+                    const desc = document.getElementById(`desc-${idx}`).value || "No Details";
                     const dateStr = new Date().toLocaleString();
                     const watermarkText = `${outlet} - ${name} - ${portal} - ${desc} - ${dateStr}`;
                     ctx.fillText(watermarkText, 30, canvas.height - 35);
@@ -295,7 +275,6 @@
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Stamping & Uploading...";
             const activeIds = [];
             for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
 
@@ -307,31 +286,21 @@
                 }
 
                 const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
-                
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                
-                // Add to local history instantly
-                let history = JSON.parse(localStorage.getItem('ops_history')) || [];
-                history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
-                localStorage.setItem('ops_history', JSON.stringify(history));
-
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
-            } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
+            } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
-        /* SUPERVISOR - LIVE CLOUD FETCH (Device-Link Logic) */
+        /* SUPERVISOR - LIVE CLOUD FETCH ENGINE */
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Downloading Master Records...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching Universal Database...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
                 globalDatabase = d.history || [];
                 renderAdminLogs();
-            } catch (e) { 
-                console.error("Cloud Error", e);
-                renderAdminLogs(); // Fallback
-            }
+            } catch (e) { renderAdminLogs(); }
         }
 
         function renderAdminLogs() {
@@ -349,31 +318,32 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Synced</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Synced</div>`;
                 return;
             }
 
             filtered.reverse().forEach((row, index) => {
+                const realRowIdx = filtered.length - index;
                 const photos = row[5] || [];
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px]">No Content Found</div>`;
-
+                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Image Attached</div>`;
+                
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="flex items-center gap-4">
-                            <input type="checkbox" value="${filtered.length - index}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-slate-300 accent-sky-900">
+                            <input type="checkbox" value="${realRowIdx}|${row[4]}" class="report-checkbox w-6 h-6 rounded-xl border-slate-300 accent-sky-900">
                             <div>
                                 <h4 class="font-black text-[13px] uppercase text-slate-800 leading-tight">${row[1]}</h4>
                                 <p class="text-[9px] font-black text-sky-500 mt-1 uppercase">${row[2]} • ${row[4]}</p>
                             </div>
                         </div>
-                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Synced</span>
+                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase">Synced</span>
                     </div>
                     ${sliderHtml}
                     <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
-                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${filtered.length - index}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase shadow-sm">Preview</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${filtered.length - index})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase shadow-sm">PDF Report</button>
+                        <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIdx}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase shadow-sm">Preview</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase shadow-sm">Get PDF</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -392,7 +362,7 @@
                 const blob = new Blob([new Uint8Array(byteNums)], {type: 'application/pdf'});
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-                link.download = `Report_${role}_${rowId}.pdf`;
+                link.download = `Report_${role}_#${rowId}.pdf`;
                 link.click();
             } catch (e) { window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); } 
             finally { overlay.style.display = 'none'; }
