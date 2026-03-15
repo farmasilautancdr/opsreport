@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.6.2</title>
+    <title>OPS PORTAL V3.6.3</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +19,6 @@
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); z-index: 100; padding: 20px; border-bottom: 1px solid #e2e8f0; }
         
         .admin-slider { display: flex; overflow-x: auto; gap: 14px; padding: 10px 0; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .admin-slider::-webkit-scrollbar { display: none; }
         .slider-item { flex: 0 0 85%; scroll-snap-align: center; background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); cursor: pointer; }
         .slider-item img { width: 100%; height: 210px; object-fit: cover; }
         .slider-desc { padding: 12px 16px; font-size: 11px; color: #1e293b; font-weight: 700; background: #fff; border-top: 1px solid #f1f5f9; min-height: 50px; }
@@ -90,7 +89,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6.2</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6.3</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -134,7 +133,7 @@
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
                                     <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden">
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type photo description here..."></textarea>
@@ -181,25 +180,6 @@
                 }
                 validateSubmit();
             }
-
-            // --- UNIVERSAL PHONE ATTACHMENT BRIDGE (V3.6.2 FIX) ---
-            for(let i=1; i<=12; i++) {
-                const el = document.getElementById(`cam-${i}`);
-                el.addEventListener('change', function(e) {
-                    if (this.files && this.files[0]) {
-                        const reader = new FileReader();
-                        // Immediate read to prevent RAM suspension on older phones
-                        reader.onload = (event) => {
-                            const b64 = event.target.result;
-                            localStorage.setItem(`photo_data_${i}`, b64);
-                            displayStoredPhoto(i, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
-                            saveDraft();
-                            validateSubmit();
-                        };
-                        reader.readAsDataURL(this.files[0]);
-                    }
-                });
-            }
         };
 
         function selectRole(role) {
@@ -221,8 +201,36 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null; // Clear state so onchange fires even if re-snapped
+            input.value = null; // Essential reset
             input.click(); 
+        }
+
+        // V2.1 Strategy: Instant Buffer Stream
+        function handleImgUpload(input, id) {
+            if (!input.files || !input.files[0]) return;
+            const reader = new FileReader();
+            
+            // Immediate UI Injection before any processing
+            reader.onload = function(e) {
+                const b64 = e.target.result;
+                localStorage.setItem(`photo_data_${id}`, b64);
+                
+                // Force Update UI
+                const wrap = document.getElementById(`wrap-${id}`);
+                const placeholder = document.getElementById(`placeholder-${id}`);
+                if(placeholder) placeholder.classList.add('hidden');
+                
+                // Binary Injection
+                wrap.innerHTML = `
+                    <button class="clear-btn pointer-events-auto" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button>
+                    <img src="${b64}" style="width:100%; height:100%; object-fit:cover; border-radius:20px; pointer-events: none;">
+                    <div class="timestamp-badge">${document.getElementById('user-name').value} | ${new Date().toLocaleTimeString()}</div>
+                `;
+                
+                saveDraft();
+                validateSubmit();
+            };
+            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -262,6 +270,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
+        // STAMPING ENGINE: Delayed until Submit
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -279,7 +288,7 @@
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole + " PORTAL";
-                    const desc = document.getElementById(`desc-${idx}`).value || "No Details";
+                    const desc = document.getElementById(`desc-${idx}`).value || "Evidence Verified";
                     const dateStr = new Date().toLocaleString();
                     const watermarkText = `${outlet} - ${name} - ${portal} - ${desc} - ${dateStr}`;
                     ctx.fillText(watermarkText, 30, canvas.height - 35);
@@ -303,18 +312,13 @@
 
                 const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                
-                let history = JSON.parse(localStorage.getItem('ops_history')) || [];
-                history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
-                localStorage.setItem('ops_history', JSON.stringify(history));
-
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
             } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching Universal Database...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing Master Records...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
@@ -338,7 +342,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Synced</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Synced</div>`;
                 return;
             }
 
@@ -347,7 +351,7 @@
                 const photos = row[5] || [];
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Images Found</div>`;
+                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Images Attached</div>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -363,7 +367,7 @@
                     ${sliderHtml}
                     <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
                         <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIdx}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase shadow-sm">Preview</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase shadow-sm">Get PDF</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase shadow-sm">PDF</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -402,16 +406,12 @@
         }
 
         function promptAdmin() {
-            if(prompt("Enter Access PIN:") === "admin") { 
+            if(prompt("Security PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; 
                 fetchCloudData(); 
             } else alert("Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
-        
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
-        }
     </script>
 </body>
 </html>
