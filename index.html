@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.6.1</title>
+    <title>OPS PORTAL V3.6.2</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,6 +19,7 @@
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); z-index: 100; padding: 20px; border-bottom: 1px solid #e2e8f0; }
         
         .admin-slider { display: flex; overflow-x: auto; gap: 14px; padding: 10px 0; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .admin-slider::-webkit-scrollbar { display: none; }
         .slider-item { flex: 0 0 85%; scroll-snap-align: center; background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); cursor: pointer; }
         .slider-item img { width: 100%; height: 210px; object-fit: cover; }
         .slider-desc { padding: 12px 16px; font-size: 11px; color: #1e293b; font-weight: 700; background: #fff; border-top: 1px solid #f1f5f9; min-height: 50px; }
@@ -71,7 +72,7 @@
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <select id="filter-role" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl bg-white border border-slate-100 text-xs font-black shadow-sm outline-none">
-                        <option value="ALL">All Roles</option>
+                        <option value="ALL">All Portal Roles</option>
                         <option value="DRIVER">Driver</option>
                         <option value="OUTLET">Outlet</option>
                     </select>
@@ -89,7 +90,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6.1</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6.2</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -133,7 +134,7 @@
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
                                     <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type photo description here..."></textarea>
@@ -180,6 +181,25 @@
                 }
                 validateSubmit();
             }
+
+            // --- UNIVERSAL PHONE ATTACHMENT BRIDGE (V3.6.2 FIX) ---
+            for(let i=1; i<=12; i++) {
+                const el = document.getElementById(`cam-${i}`);
+                el.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        // Immediate read to prevent RAM suspension on older phones
+                        reader.onload = (event) => {
+                            const b64 = event.target.result;
+                            localStorage.setItem(`photo_data_${i}`, b64);
+                            displayStoredPhoto(i, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
+                            saveDraft();
+                            validateSubmit();
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+            }
         };
 
         function selectRole(role) {
@@ -201,22 +221,8 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null;
+            input.value = null; // Clear state so onchange fires even if re-snapped
             input.click(); 
-        }
-
-        // IMPROVED: Instant Buffer Attachment (No Loading Delay)
-        function handleImgUpload(input, id) {
-            if (!input.files || !input.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const b64 = e.target.result;
-                localStorage.setItem(`photo_data_${id}`, b64);
-                displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
-                saveDraft();
-                validateSubmit();
-            };
-            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -256,7 +262,6 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // STAMPING ENGINE: Fixed Format (outlet - name - portal - photo description - time & date)
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -270,8 +275,7 @@
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = "rgba(0,0,0,0.7)";
                     ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
-                    ctx.fillStyle = "#ffffff"; 
-                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Arial";
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole + " PORTAL";
@@ -308,7 +312,6 @@
             } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
-        /* SUPERVISOR - LIVE CLOUD FETCH (Device-Link Logic) */
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
             container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching Universal Database...</div>`;
@@ -335,7 +338,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Found</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Synced</div>`;
                 return;
             }
 
@@ -344,18 +347,7 @@
                 const photos = row[5] || [];
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                
-                // FIXED: Supervisor Slider Parser
-                let sliderHtml = photos.length > 0 ? `
-                    <div class="admin-slider mt-4">
-                        ${photos.map(p => `
-                            <div class="slider-item" onclick="openModalImage('${p.base64}')">
-                                <img src="${p.base64}">
-                                <div class="slider-desc">${p.description}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Images Found</div>`;
+                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Images Found</div>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
