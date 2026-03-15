@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.6.3</title>
+    <title>OPS PORTAL V3.6.4</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,6 +32,7 @@
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; border-radius: 20px; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -50,13 +51,13 @@
 
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing & Syncing...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Uploading...</h2>
     </div>
 
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
         <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner"><i class="fas fa-check"></i></div>
-        <h2 class="text-2xl font-800 uppercase tracking-widest text-slate-800">Synced to Database</h2>
-        <button onclick="clearAllAndReload()" class="mt-10 px-12 py-4 bg-sky-900 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95">New Entry</button>
+        <h2 class="text-2xl font-800 uppercase tracking-widest text-slate-800">Success</h2>
+        <button onclick="clearAllAndReload()" class="mt-10 px-12 py-4 bg-sky-900 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95">New Report</button>
     </div>
 
     <div id="admin-overlay">
@@ -64,7 +65,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-800 text-sky-900 tracking-tighter uppercase">Supervisor</h2>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Master Cloud Database Feed</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Master Database Feed</p>
                 </div>
                 <button onclick="closeAdmin()" class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-lg active:scale-90 shadow-sm"><i class="fas fa-times"></i></button>
             </div>
@@ -72,7 +73,7 @@
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <select id="filter-role" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl bg-white border border-slate-100 text-xs font-black shadow-sm outline-none">
-                        <option value="ALL">All Portal Roles</option>
+                        <option value="ALL">All Roles</option>
                         <option value="DRIVER">Driver</option>
                         <option value="OUTLET">Outlet</option>
                     </select>
@@ -90,7 +91,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6.3</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.6.4</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -106,7 +107,7 @@
                     </div>
                 </div>
                 <div class="space-y-4">
-                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Enter Staff Name" class="w-full p-5 rounded-3xl border border-slate-100 outline-none focus:ring-4 focus:ring-sky-50 bg-white font-bold text-slate-800">
+                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Enter Full Name" class="w-full p-5 rounded-3xl border border-slate-100 outline-none focus:ring-4 focus:ring-sky-50 bg-white font-bold text-slate-800">
                     <select id="outlet-select" onchange="saveDraft()" class="w-full p-5 rounded-3xl border border-slate-100 bg-white outline-none font-bold text-slate-800 appearance-none"></select>
                     <input type="date" id="entry-date" oninput="saveDraft()" class="w-full p-5 rounded-3xl border border-slate-100 bg-white outline-none font-bold text-slate-800">
                 </div>
@@ -130,11 +131,11 @@
                             <div class="photo-card space-y-4">
                                 <div class="flex justify-between items-center px-1">
                                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Evidence Slot ${i}</span>
-                                    <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-image"></i></div>
+                                    <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-camera"></i></div>
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">🖼️</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Select From Gallery</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" class="hidden" onchange="handleImgUpload(this, ${i})">
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Photo</div></div>
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type photo description here..."></textarea>
@@ -181,6 +182,23 @@
                 }
                 validateSubmit();
             }
+
+            for(let i=1; i<=12; i++) {
+                const el = document.getElementById(`cam-${i}`);
+                el.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const b64 = event.target.result;
+                            localStorage.setItem(`photo_data_${i}`, b64);
+                            displayStoredPhoto(i, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
+                            saveDraft();
+                            validateSubmit();
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+            }
         };
 
         function selectRole(role) {
@@ -204,19 +222,6 @@
             const input = document.getElementById(`cam-${id}`);
             input.value = null;
             input.click(); 
-        }
-
-        function handleImgUpload(input, id) {
-            if (!input.files || !input.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const b64 = e.target.result;
-                localStorage.setItem(`photo_data_${id}`, b64);
-                displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
-                saveDraft();
-                validateSubmit();
-            };
-            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -297,13 +302,18 @@
 
                 const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                let history = JSON.parse(localStorage.getItem('ops_history')) || [];
+                history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
+                localStorage.setItem('ops_history', JSON.stringify(history));
+
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
             } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Fetching Universal Database...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing Master Records...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
@@ -327,7 +337,7 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Found</div>`;
+                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Database Records Synced</div>`;
                 return;
             }
 
@@ -336,7 +346,7 @@
                 const photos = row[5] || [];
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Images Attached</div>`;
+                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px] italic">No Images Found</div>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -352,7 +362,7 @@
                     ${sliderHtml}
                     <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-50">
                         <button onclick="window.open('${WEB_APP_URL}?action=getReport&role=${row[4]}&row=${realRowIdx}', '_blank')" class="py-4 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase shadow-sm">Preview</button>
-                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase shadow-sm">PDF</button>
+                        <button onclick="downloadIndividualPDF('${row[4]}', ${realRowIdx})" class="py-4 bg-sky-100 text-sky-900 rounded-2xl text-[10px] font-black uppercase shadow-sm">Get PDF</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -365,16 +375,22 @@
             try {
                 const resp = await fetch(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`);
                 const result = await resp.json();
+                
+                // FIXED: Binary Blob Handshake for proper download
                 const byteChars = atob(result.data);
                 const byteNums = new Array(byteChars.length);
                 for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
                 const blob = new Blob([new Uint8Array(byteNums)], {type: 'application/pdf'});
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-                link.download = `Report_${role}_${rowId}.pdf`;
+                link.download = `Report_${role}_#${rowId}.pdf`;
+                document.body.appendChild(link);
                 link.click();
-            } catch (e) { window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); } 
-            finally { overlay.style.display = 'none'; }
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(link.href);
+            } catch (e) { 
+                window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); 
+            } finally { overlay.style.display = 'none'; }
         }
 
         function downloadBulk() {
@@ -391,12 +407,16 @@
         }
 
         function promptAdmin() {
-            if(prompt("Enter Access PIN:") === "admin") { 
+            if(prompt("Security PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; 
                 fetchCloudData(); 
             } else alert("Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+        }
     </script>
 </body>
 </html>
