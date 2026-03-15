@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V3.5.1</title>
+    <title>OPS PORTAL V3.5.2</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,6 +32,7 @@
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; border-radius: 20px; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -44,7 +45,7 @@
     <div id="image-modal" onclick="this.style.display='none'">
         <div class="flex flex-col items-center">
             <img id="modal-img" src="">
-            <p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center px-4 leading-relaxed">Tap anywhere to close</p>
+            <p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center">Tap to close</p>
         </div>
     </div>
 
@@ -64,7 +65,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-800 text-sky-900 tracking-tighter uppercase">Supervisor</h2>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Global Database Feed</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Universal Database Feed</p>
                 </div>
                 <button onclick="closeAdmin()" class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-lg active:scale-90 shadow-sm"><i class="fas fa-times"></i></button>
             </div>
@@ -90,8 +91,8 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.5.1</div>
-        <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V3.5.2</div>
+        <h1 class="text-3xl font-800 tracking-tighter uppercase tracking-tighter">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
 
@@ -99,14 +100,14 @@
         <section id="step-1" class="glass-card rounded-[40px] p-8 shadow-2xl border-none">
             <div class="space-y-8">
                 <div>
-                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identify Category</label>
+                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identity Category</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Driver</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Outlet</button>
                     </div>
                 </div>
                 <div class="space-y-4">
-                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Staff Name" class="w-full p-5 rounded-3xl border border-slate-100 outline-none font-bold text-slate-800">
+                    <input type="text" id="user-name" oninput="saveDraft()" placeholder="Staff Full Name" class="w-full p-5 rounded-3xl border border-slate-100 outline-none focus:ring-4 focus:ring-sky-50 bg-white font-bold text-slate-800">
                     <select id="outlet-select" onchange="saveDraft()" class="w-full p-5 rounded-3xl border border-slate-100 bg-white outline-none font-bold text-slate-800 appearance-none"></select>
                     <input type="date" id="entry-date" oninput="saveDraft()" class="w-full p-5 rounded-3xl border border-slate-100 bg-white outline-none font-bold text-slate-800">
                 </div>
@@ -133,11 +134,11 @@
                                     <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-400 text-xs shadow-inner"><i class="fas fa-camera"></i></div>
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
-                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Capture Now</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="previewLocalPhoto(this, ${i})">
-                                    <div id="wrap-${i}" class="absolute inset-0 z-10 pointer-events-none"></div>
+                                    <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImgUpload(this, ${i})">
+                                    <div id="wrap-${i}" class="absolute inset-0 pointer-events-none z-10"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type specific details here..."></textarea>
                             </div>
                         `);
                     }
@@ -201,23 +202,29 @@
         }
 
         function triggerCamera(id) { 
-            const el = document.getElementById(`cam-${id}`);
-            el.value = ""; // Reset value so re-taking the same photo triggers the change event
-            el.click(); 
+            const input = document.getElementById(`cam-${id}`);
+            input.value = null; // Forced reset for re-triggers
+            input.click(); 
         }
 
-        // V2.1 Working Logic: Instant preview bypasses the stamping lag
-        function previewLocalPhoto(input, id) {
-            if(!input.files || !input.files[0]) return;
+        // V2.1 Logic: Zero-lag instant attachment
+        function handleImgUpload(input, id) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
             const reader = new FileReader();
+            
+            document.getElementById('loading-overlay').style.display = "flex";
+            document.getElementById('loading-text').innerText = "Attaching Image...";
+
             reader.onload = function(e) {
                 const b64 = e.target.result;
                 localStorage.setItem(`photo_data_${id}`, b64);
                 displayStoredPhoto(id, b64, `${document.getElementById('user-name').value} | ${document.getElementById('outlet-select').value}`);
                 saveDraft();
                 validateSubmit();
-            }
-            reader.readAsDataURL(input.files[0]);
+                document.getElementById('loading-overlay').style.display = "none";
+            };
+            reader.readAsDataURL(file);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -226,7 +233,7 @@
             if(placeholder) placeholder.classList.add('hidden');
             wrap.innerHTML = `
                 <button class="clear-btn pointer-events-auto" onclick="clearPhoto(${id}); event.stopPropagation();">Clear</button>
-                <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:20px;">
+                <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:20px; pointer-events: none;">
                 <div class="timestamp-badge">${meta}</div>
             `;
         }
@@ -257,7 +264,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // STAMPING ENGINE (Run only during submission)
+        // STAMPING ENGINE: Run only during final submission
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -303,6 +310,7 @@
                 
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
                 
+                // Add to local history instantly
                 let history = JSON.parse(localStorage.getItem('ops_history')) || [];
                 history.push([new Date().toISOString(), payload.user, payload.outlet, payload.date, payload.role, photos]);
                 localStorage.setItem('ops_history', JSON.stringify(history));
@@ -311,10 +319,10 @@
             } catch (e) { alert("Network Error."); overlay.style.display = 'none'; }
         }
 
-        /* SUPERVISOR - LIVE CLOUD DATA FETCH (Cross-Device Sync) */
+        /* SUPERVISOR - LIVE CLOUD FETCH (Device-Link Logic) */
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Syncing All Devices...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Downloading Master Records...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
@@ -322,7 +330,7 @@
                 renderAdminLogs();
             } catch (e) { 
                 console.error("Cloud Error", e);
-                renderAdminLogs(); // Fallback to local
+                renderAdminLogs(); // Fallback
             }
         }
 
@@ -349,7 +357,7 @@
                 const photos = row[5] || [];
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative";
-                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px]">No Content</div>`;
+                let sliderHtml = photos.length > 0 ? `<div class="admin-slider mt-4">${photos.map(p => `<div class="slider-item" onclick="openModalImage('${p.base64}')"><img src="${p.base64}"><div class="slider-desc">${p.description}</div></div>`).join('')}</div>` : `<div class="text-center text-slate-300 py-8 text-[10px]">No Content Found</div>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -404,12 +412,16 @@
         }
 
         function promptAdmin() {
-            if(prompt("Security PIN:") === "admin") { 
+            if(prompt("Enter Access PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; 
                 fetchCloudData(); 
             } else alert("Denied.");
         }
         function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+        }
     </script>
 </body>
 </html>
