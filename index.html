@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V4.1.2</title>
+    <title>OPS PORTAL V4.2</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,25 +14,20 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
         .ocean-gradient { background: linear-gradient(135deg, #075985 0%, #0c4a6e 100%); }
         .glass-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border: 1px solid #bae6fd; }
-        
         #admin-overlay { display: none; position: fixed; inset: 0; background: #f8fafc; z-index: 9999; flex-direction: column; overflow-y: auto; }
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); z-index: 100; padding: 20px; border-bottom: 1px solid #e2e8f0; }
-        
         .admin-slider { display: flex; overflow-x: auto; gap: 14px; padding: 10px 0; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .admin-slider::-webkit-scrollbar { display: none; }
         .slider-item { flex: 0 0 85%; scroll-snap-align: center; background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); cursor: pointer; position: relative; }
         .slider-item img { width: 100%; height: 210px; object-fit: cover; }
         .slider-desc { padding: 12px 16px; font-size: 11px; color: #1e293b; font-weight: 700; background: #fff; border-top: 1px solid #f1f5f9; min-height: 50px; }
-
         #image-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; align-items: center; justify-content: center; padding: 20px; }
         #image-modal img { max-width: 100%; max-height: 80vh; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-
         .photo-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 28px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .photo-upload-zone { width: 100%; height: 230px; border: 2px dashed #cbd5e1; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #f1f5f9; cursor: pointer; }
         .photo-upload-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; border-radius: 20px; }
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -43,10 +38,7 @@
     <canvas id="compressCanvas" class="hidden"></canvas>
 
     <div id="image-modal" onclick="this.style.display='none'">
-        <div class="flex flex-col items-center">
-            <img id="modal-img" src="">
-            <p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center px-4 leading-relaxed">Tap anywhere to close</p>
-        </div>
+        <div class="flex flex-col items-center"><img id="modal-img" src=""><p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center px-4 leading-relaxed">Tap to close</p></div>
     </div>
 
     <div id="loading-overlay">
@@ -69,7 +61,6 @@
                 </div>
                 <button onclick="closeAdmin()" class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-lg active:scale-90 shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <select id="filter-role" onchange="renderAdminLogs()" class="w-full p-4 rounded-2xl bg-white border border-slate-100 text-xs font-black shadow-sm outline-none">
@@ -91,16 +82,16 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.1.2</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
-        <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
+        <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Enterprise Reporting</p>
     </header>
 
     <main class="px-5 -mt-16 pb-20 relative z-10">
         <section id="step-1" class="glass-card rounded-[40px] p-8 shadow-2xl border-none">
             <div class="space-y-8">
                 <div>
-                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identity Selection</label>
+                    <label class="text-[10px] font-900 text-sky-900/40 uppercase mb-4 block tracking-[0.2em] text-center uppercase">Identify Role</label>
                     <div class="grid grid-cols-2 gap-4">
                         <button id="role-driver" onclick="selectRole('DRIVER')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Driver</button>
                         <button id="role-outlet" onclick="selectRole('OUTLET')" class="py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white transition-all uppercase">Outlet</button>
@@ -118,9 +109,7 @@
         <section id="step-2" class="hidden space-y-6 mt-4">
             <div class="flex items-center gap-3 bg-white/50 p-2 rounded-2xl backdrop-blur-sm shadow-inner">
                 <button onclick="goBack()" class="bg-white px-6 py-3 rounded-xl shadow-md text-sky-900 font-black text-[11px] flex items-center border border-sky-100 active:scale-90 uppercase">BACK</button>
-                <div class="flex-1 text-right mr-4">
-                    <span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest"></span>
-                </div>
+                <div class="flex-1 text-right mr-4"><span id="portal-display-title" class="text-sky-900 font-900 text-[10px] uppercase tracking-widest"></span></div>
             </div>
             <div id="photo-grid" class="space-y-6">
                 <script>
@@ -133,10 +122,10 @@
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
                                     <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleHardwareCapture(this, ${i})">
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleRawHardwareCapture(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Type photo description here..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Description here..."></textarea>
                             </div>
                         `);
                     }
@@ -146,11 +135,7 @@
         </section>
     </main>
 
-    <div class="fixed bottom-4 right-4 z-[1000]">
-        <button onclick="promptAdmin()" class="bg-white/90 backdrop-blur-md p-4 rounded-full text-[10px] font-black text-sky-900 shadow-2xl uppercase border border-sky-100 active:scale-95 transition-all shadow-sky-200">
-            Supervisor
-        </button>
-    </div>
+    <div class="fixed bottom-4 right-4 z-[1000]"><button onclick="promptAdmin()" class="bg-white/90 backdrop-blur-md p-4 rounded-full text-[10px] font-black text-sky-900 shadow-2xl uppercase border border-sky-100 active:scale-95 transition-all shadow-sky-200">Supervisor</button></div>
 
     <script>
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwy58cuAW4o6ZMuvH98TWoBwnSFfxppFG-eg6kbZvzM1I9fNYHlejK6WVFj79fZwY1r5w/exec';
@@ -162,7 +147,6 @@
         const adminSel = document.getElementById('filter-outlet');
         sel.innerHTML = outlets.map(o => `<option value="${o}">${o}</option>`).join('');
         adminSel.innerHTML = `<option value="ALL">All Outlets</option>` + outlets.map(o => `<option value="${o}">${o}</option>`).join('');
-        
         document.getElementById('entry-date').valueAsDate = new Date();
         document.getElementById('filter-date').value = new Date().toISOString().slice(0, 7);
 
@@ -176,7 +160,7 @@
                 for(let i=1; i<=12; i++) {
                     if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
-                    if(savedImg) displayStoredPhoto(i, savedImg, `Point Secured`);
+                    if(savedImg) displayStoredPhoto(i, savedImg, `Point Ready`);
                 }
                 validateSubmit();
             }
@@ -201,46 +185,21 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null; // Forced reset for mobile re-triggers
+            input.value = null; // Flush cache for mobile
             input.click(); 
         }
 
-        // --- WORKFLOW 1: Direct Live Portal Feed (Client-Side Rendering) ---
-        function handleHardwareCapture(input, id) {
+        function handleRawHardwareCapture(input, id) {
             if (!input.files || !input.files[0]) return;
-            const file = input.files[0];
             const reader = new FileReader();
-
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.getElementById('compressCanvas');
-                    const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 1200;
-                    const scale = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    ctx.fillStyle = "rgba(0,0,0,0.65)";
-                    ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-                    ctx.fillStyle = "white";
-                    ctx.font = "bold 24px Arial";
-                    const outlet = document.getElementById('outlet-select').value;
-                    const name = document.getElementById('user-name').value.toUpperCase();
-                    const desc = document.getElementById(`desc-${id}`).value || "Evidence Captured";
-                    const stamp = `${outlet} - ${name} - ${currentRole} - ${desc} - ${new Date().toLocaleString()}`;
-                    ctx.fillText(stamp, 30, canvas.height - 30);
-                    
-                    const b64 = canvas.toDataURL('image/jpeg', 0.8);
-                    localStorage.setItem(`photo_data_${id}`, b64);
-                    displayStoredPhoto(id, b64, `Evidence Ready`);
-                    saveDraft();
-                    validateSubmit();
-                };
-                img.src = e.target.result;
+                const b64 = e.target.result;
+                localStorage.setItem(`photo_data_${id}`, b64);
+                displayStoredPhoto(id, b64, `Snapshot Logged`);
+                saveDraft();
+                validateSubmit();
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -267,7 +226,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Verify Identity.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Identify Yourself.");
             document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
@@ -276,33 +235,70 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
+        // Watermarking Logic: Stamped only at final submission to prevent camera hardware clash
+        async function stampImageWithDescription(base64, idx) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64;
+                img.onload = () => {
+                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
+                    const MAX = 1200;
+                    const scale = MAX / img.width;
+                    canvas.width = MAX; canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "rgba(0,0,0,0.7)";
+                    ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
+                    ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Arial";
+                    const outlet = document.getElementById('outlet-select').value;
+                    const name = document.getElementById('user-name').value.toUpperCase();
+                    const desc = document.getElementById(`desc-${idx}`).value || "Verified";
+                    const time = new Date().toLocaleString();
+                    ctx.fillText(`${outlet} - ${name} - ${currentRole} - ${desc} - ${time}`, 30, canvas.height - 35);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            });
+        }
+
+        // --- SUBMISSION MAPPING: Timestamp, User, Outlet, Date, P1, D1, P2, D2... ---
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            const activeIds = [];
-            for (let i = 1; i <= 12; i++) if (localStorage.getItem(`photo_data_${i}`)) activeIds.push(i); 
+            const photosPayload = [];
 
             try {
-                const photos = [];
-                for(let id of activeIds) {
-                    photos.push({ base64: localStorage.getItem(`photo_data_${id}`), description: document.getElementById(`desc-${id}`).value || "Evidence" });
+                for (let i = 1; i <= 12; i++) {
+                    const b64 = localStorage.getItem(`photo_data_${i}`);
+                    if (b64) {
+                        const stampedB64 = await stampImageWithDescription(b64, i);
+                        photosPayload.push({ base64: stampedB64, description: document.getElementById(`desc-${i}`).value || "Verified" });
+                    } else {
+                        photosPayload.push({ base64: "", description: "" });
+                    }
                 }
-                const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
+
+                const payload = { 
+                    user: document.getElementById('user-name').value, 
+                    role: currentRole, 
+                    outlet: document.getElementById('outlet-select').value, 
+                    date: document.getElementById('entry-date').value, 
+                    photos: photosPayload 
+                };
+
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
             } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
-        // --- WORKFLOW 2: Live Portal Feed (Handshake with Cloud Database) ---
+        // --- DASHBOARD WORKFLOW: Instant View via Thumbnails ---
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Accessing Cloud Database...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Accessing Universal Database...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
                 globalDatabase = d.history || [];
                 renderAdminLogs();
-            } catch (e) { container.innerHTML = `<div class="text-center py-20 text-red-500 font-black text-xs uppercase tracking-widest">Handshake Failed</div>`; }
+            } catch (e) { container.innerHTML = `<div class="text-center py-20 text-red-500 font-black text-xs uppercase">Handshake Rejected</div>`; }
         }
 
         function renderAdminLogs() {
@@ -319,18 +315,12 @@
                 return matchRole && matchOutlet && matchDate;
             });
 
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Cloud Data Synced</div>`;
-                return;
-            }
-
             filtered.reverse().forEach((row, index) => {
                 const realRowIdx = filtered.length - index;
                 const photos = row[5] || [];
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative mb-6";
                 
-                // CLIENT-SIDE SLIDER Logic
                 let sliderHtml = photos.length > 0 ? `
                     <div class="admin-slider mt-4">
                         ${photos.map(p => `
@@ -363,36 +353,31 @@
             });
         }
 
-        // --- WORKFLOW 3: Remote PDF Generation (Server-Side Conversion) ---
+        // --- PDF WORKFLOW: Server-Side Robust Generation ---
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            overlay.querySelector('h2').innerText = "Generating Official PDF...";
+            overlay.querySelector('h2').innerText = "Generating PDF...";
             try {
                 const resp = await fetch(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`);
                 const result = await resp.json();
                 
-                // BINARY BLOB Logic: Standard for saving clean PDFs
-                const binaryString = atob(result.data);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                const blob = new Blob([bytes], {type: 'application/pdf'});
+                // FIXED Binary Handshake for Proper PDF saving
+                const byteCharacters = atob(result.data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+                const blob = new Blob([new Uint8Array(byteNumbers)], {type: 'application/pdf'});
                 
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-                link.download = `Verified_Report_${role}_${rowId}.pdf`;
+                link.download = `Log_${role}_#${rowId}.pdf`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
             } catch (e) { 
                 window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); 
-            } finally { 
-                overlay.style.display = 'none'; 
-                overlay.querySelector('h2').innerText = "Uploading...";
-            }
+            } finally { overlay.style.display = 'none'; overlay.querySelector('h2').innerText = "Uploading..."; }
         }
 
         function downloadBulk() {
