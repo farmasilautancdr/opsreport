@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V4.1</title>
+    <title>OPS PORTAL V4.1.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,7 @@
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -43,7 +43,7 @@
     <canvas id="compressCanvas" class="hidden"></canvas>
 
     <div id="image-modal" onclick="this.style.display='none'">
-        <div class="flex flex-col items-center"><img id="modal-img" src=""><p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center px-4 leading-relaxed">Tap to close</p></div>
+        <div class="flex flex-col items-center"><img id="modal-img" src=""><p class="text-white mt-4 text-xs font-bold uppercase tracking-widest text-center px-4 leading-relaxed">Tap anywhere to close</p></div>
     </div>
 
     <div id="loading-overlay">
@@ -88,7 +88,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.1</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.1.1</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -166,7 +166,7 @@
                 for(let i=1; i<=12; i++) {
                     if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
-                    if(savedImg) displayStoredPhoto(i, savedImg, `Point Secured`);
+                    if(savedImg) displayStoredPhoto(i, savedImg, `Success Snapped`);
                 }
                 validateSubmit();
             }
@@ -191,18 +191,18 @@
 
         function triggerCamera(id) { 
             const input = document.getElementById(`cam-${id}`);
-            input.value = null; // Clear to force trigger on every snap
+            input.value = null; // Clear to prevent clash on rapid snaps
             input.click(); 
         }
 
-        // V4.1 HARD CAPTURE BRIDGE: Raw ingestion to avoid clash with watermark engine
+        // V4.1.1 HARD CAPTURE BRIDGE: Standard file buffer ingestion
         function handleRawHardwareCapture(input, id) {
             if (!input.files || !input.files[0]) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 const b64 = e.target.result;
                 localStorage.setItem(`photo_data_${id}`, b64);
-                displayStoredPhoto(id, b64, `Success Snap`);
+                displayStoredPhoto(id, b64, `Ready to Sync`);
                 saveDraft();
                 validateSubmit();
             };
@@ -233,7 +233,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Verify Login Info.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Verify Identity.");
             document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
@@ -242,7 +242,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // Watermarking is done LATE (at submission) to ensure capture never crashes
+        // Watermark added LATE at submission to avoid hardware clash
         async function stampImageWithDescription(base64, idx) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -258,7 +258,7 @@
                     ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Arial";
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
-                    const desc = document.getElementById(`desc-${idx}`).value || "Evidence Point";
+                    const desc = document.getElementById(`desc-${idx}`).value || "Verified";
                     const time = new Date().toLocaleString();
                     ctx.fillText(`${outlet} - ${name} - ${currentRole} - ${desc} - ${time}`, 30, canvas.height - 35);
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
@@ -281,18 +281,18 @@
                 const payload = { user: document.getElementById('user-name').value, role: currentRole, outlet: document.getElementById('outlet-select').value, date: document.getElementById('entry-date').value, photos: photos };
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
                 setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
-            } catch (e) { alert("Database Connection Error."); overlay.style.display = 'none'; }
+            } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
         async function fetchCloudData() {
             const container = document.getElementById('admin-log-container');
-            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Connecting to Master Database...</div>`;
+            container.innerHTML = `<div class="text-center py-20 font-black text-sky-900 animate-pulse uppercase tracking-widest text-xs">Accessing Master Records...</div>`;
             try {
                 const r = await fetch(WEB_APP_URL + "?action=fetchData");
                 const d = await r.json();
                 globalDatabase = d.history || [];
                 renderAdminLogs();
-            } catch (e) { container.innerHTML = `<div class="text-center py-20 text-red-500 font-black text-xs uppercase tracking-widest">Handshake Refused</div>`; }
+            } catch (e) { container.innerHTML = `<div class="text-center py-20 text-red-500 font-black text-xs uppercase tracking-widest">Handshake Failed</div>`; }
         }
 
         function renderAdminLogs() {
@@ -323,12 +323,12 @@
         async function downloadIndividualPDF(role, rowId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            overlay.querySelector('h2').innerText = "Building PDF...";
+            overlay.querySelector('h2').innerText = "Generating PDF...";
             try {
                 const resp = await fetch(`${WEB_APP_URL}?action=generatePDF&role=${role}&row=${rowId}`);
                 const result = await resp.json();
                 
-                // DATA URL BLOB HANDSHAKE: Professional standard for Mobile/PC saving
+                // CRITICAL BINARY HANDSHAKE: Resolves the "Jumbled Words" / corruption error
                 const byteCharacters = atob(result.data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -360,7 +360,7 @@
         }
 
         function promptAdmin() {
-            if(prompt("Enter System PIN:") === "admin") { 
+            if(prompt("System Access PIN:") === "admin") { 
                 document.getElementById('admin-overlay').style.display = 'flex'; 
                 fetchCloudData(); 
             } else alert("Denied.");
