@@ -174,7 +174,7 @@
             for(let i=1; i<=12; i++) {
                 const area = document.getElementById(`desc-${i}`);
                 area.placeholder = ph;
-                area.value = ""; 
+                area.value = "";
             }
             saveDraft();
         }
@@ -192,7 +192,7 @@
             input.click(); 
         }
 
-        // --- FIXED WATERMARK LOGIC: Pulls actual user input ---
+        // --- FIXED WATERMARK LOGIC: Pulls individual user input per slot ---
         function handleImmediateStamping(input, id) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
@@ -219,12 +219,13 @@
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole;
                     
-                    // TARGETED FIX: Pull what user wrote in the specific description box
-                    const userInput = document.getElementById(`desc-${id}`).value.trim();
-                    const desc = userInput || "POINT VERIFIED"; 
+                    // --- TARGETED FIX: Pull unique description for THIS slot ---
+                    const descArea = document.getElementById(`desc-${id}`);
+                    const desc = descArea.value.trim() || descArea.placeholder; 
                     
                     const time = new Date().toLocaleString('en-GB', { hour12: true }).toUpperCase();
                     
+                    // Stamp Format: OUTLET - NAME - PORTAL - UNIQUE PHOTO DESCRIPTION - TIME & DATE
                     const stampText = `${outlet} - ${name} - ${portal} - ${desc} - ${time}`;
                     ctx.fillText(stampText, 30, canvas.height - 35);
                     
@@ -273,6 +274,7 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
+        // --- SMART ARRANGEMENT Logic: Compacts gaps (1,3,6 -> 1,2,3) ---
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
@@ -283,7 +285,7 @@
                 if (b64) {
                     activeSnaps.push({
                         base64: b64,
-                        description: document.getElementById(`desc-${i}`).value || "Verified"
+                        description: document.getElementById(`desc-${i}`).value || document.getElementById(`desc-${i}`).placeholder
                     });
                 }
             }
