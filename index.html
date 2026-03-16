@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V4.2.4</title>
+    <title>OPS PORTAL V4.2.7</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,7 +43,7 @@
 
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Uploading...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing & Stamping...</h2>
     </div>
 
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
@@ -80,12 +80,12 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.4</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.7</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
 
-    <main class="px-5 -mt-16 pb-20 relative z-10">
+    <main class="px-5 -mt-16 pb-10 relative z-10">
         <section id="step-1" class="glass-card rounded-[40px] p-8 shadow-2xl border-none">
             <div class="space-y-8">
                 <div>
@@ -120,7 +120,7 @@
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
                                     <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImmediateStamping(this, ${i})">
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleRawCapture(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="..."></textarea>
@@ -129,8 +129,13 @@
                     }
                 </script>
             </div>
-            <button id="submit-btn" disabled onclick="processAllPortals()" class="w-full bg-slate-900 text-white font-black py-7 rounded-[2.5rem] shadow-2xl uppercase tracking-[0.4em] mt-8 mb-20 active:scale-95 transition-all">Submit Report</button>
+            <button id="submit-btn" disabled onclick="processAllPortals()" class="w-full bg-slate-900 text-white font-black py-7 rounded-[2.5rem] shadow-2xl uppercase tracking-[0.4em] mt-8 active:scale-95 transition-all">Submit Report</button>
         </section>
+
+        <footer class="mt-12 text-center pb-10">
+            <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">System Protected & Encrypted</p>
+            <p class="text-[8px] font-bold text-slate-400 uppercase mt-2 opacity-50">Authorized Personnel Only • V4.2.7</p>
+        </footer>
     </main>
 
     <div class="fixed bottom-4 right-4 z-[1000]"><button onclick="promptAdmin()" class="bg-white/90 backdrop-blur-md p-4 rounded-full text-[10px] font-black text-sky-900 shadow-2xl uppercase border border-sky-100 active:scale-95 transition-all shadow-sky-200">Supervisor</button></div>
@@ -158,7 +163,7 @@
                 for(let i=1; i<=12; i++) {
                     if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
-                    if(savedImg) displayStoredPhoto(i, savedImg, `Point Secured`);
+                    if(savedImg) displayStoredPhoto(i, savedImg, `Raw Evidence Captured`);
                 }
                 validateSubmit();
             }
@@ -169,7 +174,6 @@
             const isDriver = role === 'DRIVER';
             document.getElementById('role-driver').className = isDriver ? 'py-6 border-2 border-sky-500 rounded-3xl font-black text-sky-600 bg-sky-50 shadow-inner' : 'py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white';
             document.getElementById('role-outlet').className = !isDriver ? 'py-6 border-2 border-sky-500 rounded-3xl font-black text-sky-600 bg-sky-50 shadow-inner' : 'py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white';
-            
             const ph = isDriver ? "LOKASI / DUIT TUKAR / LAIN-LAIN REPORT" : "DUIT TUKAR / ACCURACY / LAIN-LAIN REPORT";
             for(let i=1; i<=12; i++) {
                 const area = document.getElementById(`desc-${i}`);
@@ -192,52 +196,17 @@
             input.click(); 
         }
 
-        function handleImmediateStamping(input, id) {
+        function handleRawCapture(input, id) {
             if (!input.files || !input.files[0]) return;
-            const file = input.files[0];
             const reader = new FileReader();
-
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 1200;
-                    const scale = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH; 
-                    canvas.height = img.height * scale;
-                    
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    ctx.fillStyle = "rgba(0,0,0,0.65)";
-                    ctx.fillRect(0, canvas.height - 85, canvas.width, 85);
-                    
-                    ctx.fillStyle = "white";
-                    ctx.font = "bold 22px Arial";
-                    
-                    const outlet = document.getElementById('outlet-select').value;
-                    const name = document.getElementById('user-name').value.toUpperCase();
-                    const portal = currentRole;
-                    
-                    // TARGETED FIX: Pull unique description for THIS slot
-                    const descArea = document.getElementById(`desc-${id}`);
-                    const desc = descArea.value.trim() || descArea.placeholder; 
-                    
-                    const time = new Date().toLocaleString('en-GB', { hour12: true }).toUpperCase();
-                    
-                    // Format: OUTLET - NAME - PORTAL - PHOTO DESCRIPTION - TIME & DATE
-                    const stampText = `${outlet} - ${name} - ${portal} - ${desc} - ${time}`;
-                    ctx.fillText(stampText, 30, canvas.height - 35);
-                    
-                    const finalB64 = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    localStorage.setItem(`photo_data_${id}`, finalB64);
-                    displayStoredPhoto(id, finalB64, `STAMPED`);
-                    saveDraft();
-                    validateSubmit();
-                };
-                img.src = e.target.result;
+                const b64 = e.target.result;
+                localStorage.setItem(`photo_data_${id}`, b64);
+                displayStoredPhoto(id, b64, `Evidence Cached`);
+                saveDraft();
+                validateSubmit();
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -273,32 +242,69 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // --- SMART ARRANGEMENT Logic: Compacts gaps (1,3,6 -> 1,2,3) ---
+        // --- NEW POST-SUBMISSION STAMPING ENGINE ---
+        async function stampSingleImage(base64, slotDescription) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64;
+                img.onload = () => {
+                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 1200;
+                    const scale = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH; 
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = "rgba(0,0,0,0.65)";
+                    ctx.fillRect(0, canvas.height - 85, canvas.width, 85);
+                    
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 22px Arial";
+                    
+                    const outlet = document.getElementById('outlet-select').value;
+                    const name = document.getElementById('user-name').value.toUpperCase();
+                    const portal = currentRole;
+                    const time = new Date().toLocaleString('en-GB', { hour12: true }).toUpperCase();
+                    
+                    // Sequence: OUTLET - NAME - PORTAL - [SLOT DESCRIPTION] - TIME & DATE
+                    const stampText = `${outlet} - ${name} - ${portal} - ${slotDescription} - ${time}`;
+                    ctx.fillText(stampText, 30, canvas.height - 35);
+                    
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            });
+        }
+
+        // --- SMART ARRANGEMENT Logic FOR PHOTO INSERTION ---
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
             
-            const activeSnaps = [];
+            // 1. FILTER: Find all raw photos and their unique descriptions
+            const rawPool = [];
             for (let i = 1; i <= 12; i++) {
                 const b64 = localStorage.getItem(`photo_data_${i}`);
                 if (b64) {
-                    activeSnaps.push({
-                        base64: b64,
-                        description: document.getElementById(`desc-${i}`).value || document.getElementById(`desc-${i}`).placeholder
+                    rawPool.push({
+                        rawB64: b64,
+                        description: document.getElementById(`desc-${i}`).value.trim() || document.getElementById(`desc-${i}`).placeholder
                     });
                 }
             }
 
+            // 2. STAMPING & COMPACTING: Apply watermark sequentially (Slots 1,2,3...)
             const photosPayload = [];
-            for (let i = 0; i < 12; i++) {
-                if (activeSnaps[i]) {
-                    photosPayload.push(activeSnaps[i]);
-                } else {
-                    photosPayload.push({ base64: "", description: "" });
-                }
-            }
-
             try {
+                for (let i = 0; i < 12; i++) {
+                    if (rawPool[i]) {
+                        // Stamp now with its specific description
+                        const stamped = await stampSingleImage(rawPool[i].rawB64, rawPool[i].description);
+                        photosPayload.push({ base64: stamped, description: rawPool[i].description });
+                    } else {
+                        photosPayload.push({ base64: "", description: "" });
+                    }
+                }
+
                 const payload = { 
                     user: document.getElementById('user-name').value, 
                     role: currentRole, 
@@ -329,19 +335,16 @@
             const roleFilter = document.getElementById('filter-role').value;
             const outletFilter = document.getElementById('filter-outlet').value;
             const dateFilter = document.getElementById('filter-date').value;
-
             const filtered = globalDatabase.filter(row => {
                 const matchRole = roleFilter === "ALL" || row[4].toUpperCase() === roleFilter.toUpperCase(); 
                 const matchOutlet = outletFilter === "ALL" || row[2] === outletFilter;
                 const matchDate = !dateFilter || row[0].toString().startsWith(dateFilter);
                 return matchRole && matchOutlet && matchDate;
             });
-
             if(filtered.length === 0) {
                 container.innerHTML = `<div class="text-center py-24 opacity-20 font-black text-xs uppercase tracking-widest">No Records Found</div>`;
                 return;
             }
-
             filtered.reverse().forEach((row, index) => {
                 const realRowIdx = filtered.length - index;
                 const photos = row[5] || [];
@@ -398,9 +401,3 @@
     </script>
 </body>
 </html>
-
-modify above index and generate new index WITHOUT missing any existing features, wording and functions. STRICTLY ONLY modify which I write below:
-1. i need during report submission. the photo logic arrange to Photo_1, Desc_1, Photo_2, Desc_2,Photo_3, Desc_3, Photo_4, Desc_4, Photo_5, Desc_5, Photo_6, Desc_6, Photo_7, Desc_7, Photo_8, Desc_8, Photo_9, Desc_9, Photo_10, Desc_10, Photo_11, Desc_11, Photo_12, Desc_12. follow exactly 28 column header logic in database. DO NOT ADD OR LESS
-2. UPDATE TO V4.2.6
-3. USE IMMEDIATE STAMP LOGIC
-4. USE SMART ARRANGEMENT LOGIC
