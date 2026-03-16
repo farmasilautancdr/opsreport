@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V4.2.4</title>
+    <title>OPS PORTAL V4.2.5</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -80,7 +80,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.4</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.5</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -192,7 +192,7 @@
             input.click(); 
         }
 
-        // --- 1. IMMEDIATE STAMP LOGIC: Stamps instantly on capture ---
+        // --- FIXED WATERMARK LOGIC: Pulls actual description value ---
         function handleImmediateStamping(input, id) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
@@ -220,16 +220,16 @@
                     const outlet = document.getElementById('outlet-select').value;
                     const name = document.getElementById('user-name').value.toUpperCase();
                     const portal = currentRole;
-                    const desc = document.getElementById(`desc-${id}`).value || "POINT VERIFIED";
+                    // FIX: Pull specific description from textarea, fallback to placeholder text if empty
+                    const descArea = document.getElementById(`desc-${id}`);
+                    const desc = descArea.value.trim() || descArea.placeholder;
                     const time = new Date().toLocaleString('en-GB', { hour12: true }).toUpperCase();
                     
-                    // Format: OUTLET - NAME - PORTAL - PHOTO DESCRIPTION - TIME & DATE
                     const stampText = `${outlet} - ${name} - ${portal} - ${desc} - ${time}`;
                     ctx.fillText(stampText, 30, canvas.height - 35);
                     
                     const finalB64 = canvas.toDataURL('image/jpeg', 0.8);
                     
-                    // Immediate Injection
                     localStorage.setItem(`photo_data_${id}`, finalB64);
                     displayStoredPhoto(id, finalB64, `STAMPED`);
                     saveDraft();
@@ -273,24 +273,22 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // --- 2. SMART ARRANGEMENT Logic: Compacts gaps (1,3,6 -> 1,2,3) ---
+        // --- SMART ARRANGEMENT Logic: Compacts gaps (1,3,6 -> 1,2,3) ---
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
             
-            // Collect existing snaps
             const activeSnaps = [];
             for (let i = 1; i <= 12; i++) {
                 const b64 = localStorage.getItem(`photo_data_${i}`);
                 if (b64) {
                     activeSnaps.push({
                         base64: b64,
-                        description: document.getElementById(`desc-${i}`).value || "Verified"
+                        description: document.getElementById(`desc-${i}`).value || document.getElementById(`desc-${i}`).placeholder
                     });
                 }
             }
 
-            // Map into strictly sequential 28-column row format
             const photosPayload = [];
             for (let i = 0; i < 12; i++) {
                 if (activeSnaps[i]) {
