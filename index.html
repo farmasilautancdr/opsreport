@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V4.2.1</title>
+    <title>OPS PORTAL V4.2.2</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,7 +29,7 @@
         .timestamp-badge { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: white; font-size: 10px; padding: 25px 12px 10px 12px; z-index: 20; font-weight: 600; pointer-events: none; }
         .clear-btn { position: absolute; top: 12px; right: 12px; z-index: 30; background: #ef4444; color: white; padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 89, 133, 0.98); backdrop-filter: blur(10px); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 1s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-radius: 50%; border-top-color: var(--aqua); animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -80,7 +80,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.1</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.2</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -123,7 +123,7 @@
                                     <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleHardwareCapture(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
-                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="Describe photo details..."></textarea>
+                                <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="..."></textarea>
                             </div>
                         `);
                     }
@@ -158,7 +158,7 @@
                 for(let i=1; i<=12; i++) {
                     if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
-                    if(savedImg) displayStoredPhoto(i, savedImg, `Point Secured`);
+                    if(savedImg) displayStoredPhoto(i, savedImg, `Secured`);
                 }
                 validateSubmit();
             }
@@ -169,8 +169,13 @@
             const isDriver = role === 'DRIVER';
             document.getElementById('role-driver').className = isDriver ? 'py-6 border-2 border-sky-500 rounded-3xl font-black text-sky-600 bg-sky-50 shadow-inner' : 'py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white';
             document.getElementById('role-outlet').className = !isDriver ? 'py-6 border-2 border-sky-500 rounded-3xl font-black text-sky-600 bg-sky-50 shadow-inner' : 'py-6 border-2 border-slate-100 rounded-3xl font-black text-slate-400 bg-white';
-            const ph = isDriver ? "Lokasi Outlet / Duit Tukar" : "Duit Tukar / Accuracy";
-            for(let i=1; i<=12; i++) document.getElementById(`desc-${i}`).placeholder = ph;
+            
+            const ph = isDriver ? "LOKASI / DUIT TUKAR / LAIN-LAIN REPORT" : "DUIT TUKAR / ACCURACY / LAIN-LAIN REPORT";
+            for(let i=1; i<=12; i++) {
+                const area = document.getElementById(`desc-${i}`);
+                area.placeholder = ph;
+                if(!area.value) area.value = ph; // Pre-fill wording
+            }
             saveDraft();
         }
 
@@ -192,31 +197,13 @@
             const file = input.files[0];
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 1200;
-                    const scale = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH; canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = "rgba(0,0,0,0.65)";
-                    ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-                    ctx.fillStyle = "white";
-                    ctx.font = "bold 24px Arial";
-                    const outlet = document.getElementById('outlet-select').value;
-                    const name = document.getElementById('user-name').value.toUpperCase();
-                    const desc = document.getElementById(`desc-${id}`).value || "No Details";
-                    const stamp = `${outlet} - ${name} - ${currentRole} - ${desc} - ${new Date().toLocaleString()}`;
-                    ctx.fillText(stamp, 30, canvas.height - 30);
-                    const finalB64 = canvas.toDataURL('image/jpeg', 0.8);
-                    localStorage.setItem(`photo_data_${id}`, finalB64);
-                    displayStoredPhoto(id, finalB64, `Success Stamped`);
-                    saveDraft();
-                    validateSubmit();
-                };
-                img.src = e.target.result;
+                const b64 = e.target.result;
+                localStorage.setItem(`photo_data_${id}`, b64);
+                displayStoredPhoto(id, b64, `Snapshot Logged`);
+                saveDraft();
+                validateSubmit();
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(input.files[0]);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -243,7 +230,7 @@
         }
 
         function openPortal() { 
-            if(!document.getElementById('user-name').value || !currentRole) return alert("Verify Identity.");
+            if(!document.getElementById('user-name').value || !currentRole) return alert("Identify Identity.");
             document.getElementById('step-1').classList.add('hidden'); 
             document.getElementById('step-2').classList.remove('hidden'); 
             document.getElementById('portal-display-title').innerText = currentRole + " MODE"; 
@@ -252,19 +239,52 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // --- FIXED 28-COLUMN LOGIC: Maps exactly to headers Timestamp, User, Outlet, Date, P1, D1... ---
+        // Watermarking Logic: Stamped only at final submission
+        async function stampImageWithDescription(base64, idx) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64;
+                img.onload = () => {
+                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
+                    const MAX = 1200;
+                    const scale = MAX / img.width;
+                    canvas.width = MAX; canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "rgba(0,0,0,0.7)";
+                    ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
+                    ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Arial";
+                    const outlet = document.getElementById('outlet-select').value;
+                    const name = document.getElementById('user-name').value.toUpperCase();
+                    // FIX: Retrieve specific description for THIS index
+                    const desc = document.getElementById(`desc-${idx}`).value || "Verified";
+                    const time = new Date().toLocaleString();
+                    ctx.fillText(`${outlet} - ${name} - ${currentRole} - ${desc} - ${time}`, 30, canvas.height - 35);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            });
+        }
+
+        // --- SUBMISSION MAPPING: Timestamp, User, Outlet, Date, P1, D1, P2, D2... ---
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
-            const photosPayload = [];
+            
+            // SMART ARRANGEMENT Logic: Compress 1,3,6 into 1,2,3
+            const rawPhotos = [];
+            for (let i = 1; i <= 12; i++) {
+                const b64 = localStorage.getItem(`photo_data_${i}`);
+                if (b64) rawPhotos.push({ b64: b64, desc: document.getElementById(`desc-${i}`).value, originalIdx: i });
+            }
 
+            const finalPayload = [];
             try {
-                for (let i = 1; i <= 12; i++) {
-                    const b64 = localStorage.getItem(`photo_data_${i}`);
-                    photosPayload.push({
-                        base64: b64 || "",
-                        description: document.getElementById(`desc-${i}`).value || (b64 ? "Verified" : "")
-                    });
+                for (let i = 0; i < 12; i++) {
+                    if (rawPhotos[i]) {
+                        const stampedB64 = await stampImageWithDescription(rawPhotos[i].b64, rawPhotos[i].originalIdx);
+                        finalPayload.push({ base64: stampedB64, description: rawPhotos[i].desc });
+                    } else {
+                        finalPayload.push({ base64: "", description: "" });
+                    }
                 }
 
                 const payload = { 
@@ -272,7 +292,7 @@
                     role: currentRole, 
                     outlet: document.getElementById('outlet-select').value, 
                     date: document.getElementById('entry-date').value, 
-                    photos: photosPayload 
+                    photos: finalPayload 
                 };
 
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
