@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OPS PORTAL V4.2.7</title>
+    <title>OPS PORTAL V4.2.8</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#075985">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,7 +43,7 @@
 
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Processing & Stamping...</h2>
+        <h2 id="loading-text" class="text-lg font-bold uppercase tracking-widest text-center px-6">Syncing Database...</h2>
     </div>
 
     <div id="success-overlay" class="hidden fixed inset-0 bg-white z-[10001] flex flex-col items-center justify-center text-center p-6">
@@ -80,7 +80,7 @@
     </div>
 
     <header class="ocean-gradient text-white pt-16 pb-24 px-8 rounded-b-[50px] shadow-2xl relative z-0 text-center">
-        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.7</div>
+        <div class="absolute top-6 right-8 text-[10px] font-black text-sky-300 opacity-80 bg-sky-950/30 px-3 py-1 rounded-full border border-sky-400/20">V4.2.8</div>
         <h1 class="text-3xl font-800 tracking-tighter uppercase">Ops Portal</h1>
         <p class="text-sky-100 text-[9px] font-bold tracking-[0.2em] opacity-90 uppercase mt-1">Driver & Outlet System</p>
     </header>
@@ -120,7 +120,7 @@
                                 </div>
                                 <div class="photo-upload-zone" onclick="triggerCamera(${i})">
                                     <div class="text-center" id="placeholder-${i}"><div class="text-3xl mb-1">📸</div><div class="text-[9px] font-900 text-sky-500 uppercase tracking-widest">Snap Capture</div></div>
-                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleRawCapture(this, ${i})">
+                                    <input type="file" id="cam-${i}" accept="image/*" capture="camera" class="hidden" onchange="handleImmediateStamping(this, ${i})">
                                     <div id="wrap-${i}" class="absolute inset-0 pointer-events-none"></div>
                                 </div>
                                 <textarea id="desc-${i}" oninput="saveDraft()" class="w-full p-5 rounded-2xl border border-slate-50 bg-slate-50 text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-sky-100/50" placeholder="..."></textarea>
@@ -134,7 +134,7 @@
 
         <footer class="mt-12 text-center pb-10">
             <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">System Protected & Encrypted</p>
-            <p class="text-[8px] font-bold text-slate-400 uppercase mt-2 opacity-50">Authorized Personnel Only • V4.2.7</p>
+            <p class="text-[8px] font-bold text-slate-400 uppercase mt-2 opacity-50">Authorized Personnel Only • V4.2.8</p>
         </footer>
     </main>
 
@@ -163,7 +163,7 @@
                 for(let i=1; i<=12; i++) {
                     if(draft.descriptions?.[i-1]) document.getElementById(`desc-${i}`).value = draft.descriptions[i-1];
                     const savedImg = localStorage.getItem(`photo_data_${i}`);
-                    if(savedImg) displayStoredPhoto(i, savedImg, `Raw Evidence Captured`);
+                    if(savedImg) displayStoredPhoto(i, savedImg, `Stamped Evidence`);
                 }
                 validateSubmit();
             }
@@ -196,17 +196,51 @@
             input.click(); 
         }
 
-        function handleRawCapture(input, id) {
+        // --- MERGED: INSTANT STAMPING + DETAILED INFO ---
+        function handleImmediateStamping(input, id) {
             if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
             const reader = new FileReader();
+
             reader.onload = function(e) {
-                const b64 = e.target.result;
-                localStorage.setItem(`photo_data_${id}`, b64);
-                displayStoredPhoto(id, b64, `Evidence Cached`);
-                saveDraft();
-                validateSubmit();
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 1200;
+                    const scale = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH; 
+                    canvas.height = img.height * scale;
+                    
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = "rgba(0,0,0,0.65)";
+                    ctx.fillRect(0, canvas.height - 85, canvas.width, 85);
+                    
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 22px Arial";
+                    
+                    const outlet = document.getElementById('outlet-select').value;
+                    const name = document.getElementById('user-name').value.toUpperCase();
+                    const portal = currentRole;
+                    const descArea = document.getElementById(`desc-${id}`);
+                    const slotDescription = descArea.value.trim() || descArea.placeholder;
+                    const time = new Date().toLocaleString('en-GB', { hour12: true }).toUpperCase();
+                    
+                    // Detailed Info Sequence: OUTLET - NAME - PORTAL - DESCRIPTION - TIME
+                    const stampText = `${outlet} - ${name} - ${portal} - ${slotDescription} - ${time}`;
+                    ctx.fillText(stampText, 30, canvas.height - 35);
+                    
+                    const stampedB64 = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // Snap instantly into portal
+                    localStorage.setItem(`photo_data_${id}`, stampedB64);
+                    displayStoredPhoto(id, stampedB64, `READY TO UPLOAD`);
+                    saveDraft();
+                    validateSubmit();
+                };
+                img.src = e.target.result;
             };
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
         }
 
         function displayStoredPhoto(id, base64, meta) {
@@ -242,69 +276,34 @@
         function goBack() { document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden'); }
         function clearAllAndReload() { localStorage.removeItem('ops_portal_draft'); for(let i=1; i<=12; i++) localStorage.removeItem(`photo_data_${i}`); location.reload(); }
 
-        // --- NEW POST-SUBMISSION STAMPING ENGINE ---
-        async function stampSingleImage(base64, slotDescription) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.src = base64;
-                img.onload = () => {
-                    const canvas = document.getElementById('compressCanvas'), ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 1200;
-                    const scale = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH; 
-                    canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    ctx.fillStyle = "rgba(0,0,0,0.65)";
-                    ctx.fillRect(0, canvas.height - 85, canvas.width, 85);
-                    
-                    ctx.fillStyle = "white";
-                    ctx.font = "bold 22px Arial";
-                    
-                    const outlet = document.getElementById('outlet-select').value;
-                    const name = document.getElementById('user-name').value.toUpperCase();
-                    const portal = currentRole;
-                    const time = new Date().toLocaleString('en-GB', { hour12: true }).toUpperCase();
-                    
-                    // Sequence: OUTLET - NAME - PORTAL - [SLOT DESCRIPTION] - TIME & DATE
-                    const stampText = `${outlet} - ${name} - ${portal} - ${slotDescription} - ${time}`;
-                    ctx.fillText(stampText, 30, canvas.height - 35);
-                    
-                    resolve(canvas.toDataURL('image/jpeg', 0.7));
-                };
-            });
-        }
-
         // --- SMART ARRANGEMENT Logic FOR PHOTO INSERTION ---
         async function processAllPortals() {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
             
-            // 1. FILTER: Find all raw photos and their unique descriptions
+            // 1. FILTER: Find all already-stamped photos
             const rawPool = [];
             for (let i = 1; i <= 12; i++) {
                 const b64 = localStorage.getItem(`photo_data_${i}`);
                 if (b64) {
                     rawPool.push({
-                        rawB64: b64,
+                        base64: b64,
                         description: document.getElementById(`desc-${i}`).value.trim() || document.getElementById(`desc-${i}`).placeholder
                     });
                 }
             }
 
-            // 2. STAMPING & COMPACTING: Apply watermark sequentially (Slots 1,2,3...)
+            // 2. COMPACTING: Map into strictly sequential 28-column format
             const photosPayload = [];
-            try {
-                for (let i = 0; i < 12; i++) {
-                    if (rawPool[i]) {
-                        // Stamp now with its specific description
-                        const stamped = await stampSingleImage(rawPool[i].rawB64, rawPool[i].description);
-                        photosPayload.push({ base64: stamped, description: rawPool[i].description });
-                    } else {
-                        photosPayload.push({ base64: "", description: "" });
-                    }
+            for (let i = 0; i < 12; i++) {
+                if (rawPool[i]) {
+                    photosPayload.push(rawPool[i]);
+                } else {
+                    photosPayload.push({ base64: "", description: "" });
                 }
+            }
 
+            try {
                 const payload = { 
                     user: document.getElementById('user-name').value, 
                     role: currentRole, 
@@ -314,7 +313,7 @@
                 };
 
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 3000);
+                setTimeout(() => { overlay.style.display = 'none'; document.getElementById('success-overlay').classList.remove('hidden'); }, 1500);
             } catch (e) { alert("Sync Error."); overlay.style.display = 'none'; }
         }
 
@@ -375,7 +374,7 @@
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
             } catch (e) { window.open(`${WEB_APP_URL}?action=getReport&role=${role}&row=${rowId}`, '_blank'); } 
-            finally { overlay.style.display = 'none'; overlay.querySelector('h2').innerText = "Uploading..."; }
+            finally { overlay.style.display = 'none'; overlay.querySelector('h2').innerText = "Syncing Database..."; }
         }
 
         function downloadBulk() {
